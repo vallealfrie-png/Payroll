@@ -1,0 +1,2930 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>Payroll Analyst Command Center</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <!-- Highcharts -->
+    <script src="https://code.highcharts.com/highcharts.js"></script>
+    <script src="https://code.highcharts.com/highcharts-more.js"></script>
+    <script src="https://code.highcharts.com/modules/exporting.js"></script>
+    <script src="https://code.highcharts.com/modules/accessibility.js"></script>
+
+    <!-- GSAP -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+
+    <!-- AOS -->
+    <link
+        href="https://unpkg.com/aos@2.3.4/dist/aos.css"
+        rel="stylesheet"
+    />
+    <script src="https://unpkg.com/aos@2.3.4/dist/aos.js"></script>
+
+    <!-- Lucide -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- Google Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet"
+    />
+
+    <style>
+        * {
+            font-family: "Inter", sans-serif;
+        }
+
+        body {
+            background: #f8fafc;
+        }
+
+        .sidebar {
+            transition: transform 0.3s ease;
+        }
+
+        .chart-container {
+            width: 100%;
+            min-height: 320px;
+        }
+
+        .glass {
+            background: rgba(255, 255, 255, 0.88);
+            backdrop-filter: blur(12px);
+        }
+
+        .gradient-text {
+            background: linear-gradient(90deg, #0f172a, #2563eb);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .pulse-dot {
+            animation: pulseDot 2s infinite;
+        }
+
+        @keyframes pulseDot {
+            0%, 100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+            50% {
+                opacity: .45;
+                transform: scale(.8);
+            }
+        }
+
+        .scrollbar::-webkit-scrollbar {
+            width: 5px;
+            height: 5px;
+        }
+
+        .scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
+        }
+
+        .highcharts-credits {
+            display: none !important;
+        }
+
+        .highcharts-background {
+            fill: transparent;
+        }
+
+        .table-row-hover {
+            transition: all .2s ease;
+        }
+
+        .table-row-hover:hover {
+            background: #f8fafc;
+            transform: translateX(2px);
+        }
+
+        @media (max-width: 1024px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+        }
+    </style>
+</head>
+
+<body class="text-slate-800">
+
+<!-- =========================================================
+     MOBILE OVERLAY
+========================================================= -->
+<div
+    id="mobileOverlay"
+    class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-40 hidden lg:hidden"
+    onclick="toggleSidebar()"
+></div>
+
+
+<!-- =========================================================
+     SIDEBAR
+========================================================= -->
+<aside
+    id="sidebar"
+    class="sidebar fixed left-0 top-0 bottom-0 w-72 bg-slate-950 text-white z-50 flex flex-col"
+>
+
+    <!-- Logo -->
+    <div class="h-20 px-6 flex items-center border-b border-white/10">
+
+        <div
+            class="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center mr-3 shadow-lg shadow-blue-600/20"
+        >
+            <i data-lucide="wallet-cards" class="w-5 h-5"></i>
+        </div>
+
+        <div>
+            <div class="font-bold text-sm">PAYROLL ANALYST</div>
+            <div class="text-[11px] text-slate-400">
+                Command Center
+            </div>
+        </div>
+
+    </div>
+
+
+    <!-- Navigation -->
+    <nav class="flex-1 p-4 overflow-y-auto scrollbar">
+
+        <div class="text-[10px] uppercase tracking-widest text-slate-500 font-bold px-3 mb-3">
+            Overview
+        </div>
+
+        <button
+            class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl bg-blue-600 text-white text-sm font-medium mb-1"
+        >
+            <i data-lucide="layout-dashboard" class="w-4 h-4"></i>
+            Dashboard
+        </button>
+
+
+        <div class="text-[10px] uppercase tracking-widest text-slate-500 font-bold px-3 mt-7 mb-3">
+            Payroll
+        </div>
+
+        <button class="nav-item">
+            <i data-lucide="calculator"></i>
+            Payroll Processing
+        </button>
+
+        <button class="nav-item">
+            <i data-lucide="clipboard-list"></i>
+            Payroll Register
+        </button>
+
+        <button class="nav-item">
+            <i data-lucide="git-compare"></i>
+            Reconciliation
+        </button>
+
+        <button class="nav-item">
+            <i data-lucide="triangle-alert"></i>
+            Exceptions
+        </button>
+
+
+        <div class="text-[10px] uppercase tracking-widest text-slate-500 font-bold px-3 mt-7 mb-3">
+            Analytics
+        </div>
+
+        <button class="nav-item">
+            <i data-lucide="users"></i>
+            Employee Analytics
+        </button>
+
+        <button class="nav-item">
+            <i data-lucide="clock-3"></i>
+            Overtime
+        </button>
+
+        <button class="nav-item">
+            <i data-lucide="heart-pulse"></i>
+            Benefits
+        </button>
+
+
+        <div class="text-[10px] uppercase tracking-widest text-slate-500 font-bold px-3 mt-7 mb-3">
+            Compliance
+        </div>
+
+        <button class="nav-item">
+            <i data-lucide="shield-check"></i>
+            Statutory Compliance
+        </button>
+
+        <button class="nav-item">
+            <i data-lucide="file-check-2"></i>
+            Final Pay
+        </button>
+
+
+        <div class="text-[10px] uppercase tracking-widest text-slate-500 font-bold px-3 mt-7 mb-3">
+            Reports
+        </div>
+
+        <button class="nav-item">
+            <i data-lucide="bar-chart-3"></i>
+            Reports
+        </button>
+
+        <button class="nav-item">
+            <i data-lucide="history"></i>
+            Audit Trail
+        </button>
+
+    </nav>
+
+
+    <!-- Sidebar Footer -->
+    <div class="p-4 border-t border-white/10">
+
+        <div class="flex items-center gap-3 p-3 rounded-xl bg-white/5">
+
+            <div class="w-9 h-9 rounded-full bg-blue-500 flex items-center justify-center text-xs font-bold">
+                PA
+            </div>
+
+            <div class="flex-1 min-w-0">
+                <div class="text-sm font-semibold truncate">
+                    Payroll Analyst
+                </div>
+
+                <div class="text-[11px] text-slate-400">
+                    Demo Account
+                </div>
+            </div>
+
+            <i data-lucide="settings" class="w-4 h-4 text-slate-500"></i>
+
+        </div>
+
+    </div>
+
+</aside>
+
+
+<!-- =========================================================
+     MAIN
+========================================================= -->
+<main class="lg:ml-72 min-h-screen">
+
+
+    <!-- =====================================================
+         HEADER
+    ====================================================== -->
+    <header class="sticky top-0 z-30 glass border-b border-slate-200">
+
+        <div class="px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+
+            <div class="flex items-center gap-4">
+
+                <button
+                    onclick="toggleSidebar()"
+                    class="lg:hidden p-2 rounded-lg hover:bg-slate-100"
+                >
+                    <i data-lucide="menu" class="w-5 h-5"></i>
+                </button>
+
+                <div>
+                    <h1 class="font-bold text-lg sm:text-xl text-slate-900">
+                        Payroll Analyst Command Center
+                    </h1>
+
+                    <div class="flex items-center gap-2 text-xs text-slate-500 mt-1">
+                        <span
+                            id="liveDot"
+                            class="w-2 h-2 rounded-full bg-emerald-500 pulse-dot"
+                        ></span>
+
+                        <span>Live payroll analytics</span>
+
+                        <span>•</span>
+
+                        <span id="lastRefresh">
+                            Loading...
+                        </span>
+                    </div>
+                </div>
+
+            </div>
+
+
+            <div class="flex items-center gap-2">
+
+                <button
+                    id="refreshBtn"
+                    onclick="loadDashboard()"
+                    class="flex items-center gap-2 px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm font-medium hover:bg-slate-50 transition"
+                >
+                    <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+                    <span class="hidden sm:inline">Refresh</span>
+                </button>
+
+                <button
+                    class="p-2.5 rounded-xl bg-slate-900 text-white hover:bg-slate-800 transition"
+                >
+                    <i data-lucide="bell" class="w-4 h-4"></i>
+                </button>
+
+            </div>
+
+        </div>
+
+    </header>
+
+
+    <!-- =====================================================
+         CONTENT
+    ====================================================== -->
+    <div class="p-4 sm:p-6 lg:p-8">
+
+
+        <!-- =================================================
+             FILTER BAR
+        ================================================== -->
+        <section
+            data-aos="fade-up"
+            class="bg-white rounded-2xl border border-slate-200 p-4 mb-6 shadow-sm"
+        >
+
+            <div class="flex flex-col xl:flex-row xl:items-center justify-between gap-4">
+
+                <div>
+
+                    <div class="text-xs uppercase tracking-wider font-bold text-blue-600">
+                        Payroll Monitoring
+                    </div>
+
+                    <h2 class="text-lg font-bold text-slate-900 mt-1">
+                        Payroll Overview
+                    </h2>
+
+                </div>
+
+
+                <div class="flex flex-col sm:flex-row gap-3">
+
+                    <div>
+                        <label class="block text-[10px] uppercase font-bold text-slate-400 mb-1">
+                            Payroll Period
+                        </label>
+
+                        <select
+                            id="periodFilter"
+                            onchange="applyFilters()"
+                            class="w-full sm:w-48 px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-sm font-medium outline-none focus:ring-2 focus:ring-blue-500"
+                        >
+                            <option value="all">All Periods</option>
+                        </select>
+                    </div>
+
+
+                    <div>
+                        <label class="block text-[10px] uppercase font-bold text-slate-400 mb-1">
+                            Department
+                        </label>
+
+                        <select
+                            id="departmentFilter"
+                            onchange="applyFilters()"
+                            class="w-full sm:w-48 px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-sm font-medium outline-none focus:ring-2 focus:ring-blue-500"
+                        >
+                            <option value="all">All Departments</option>
+                        </select>
+                    </div>
+
+
+                    <div class="flex items-end">
+
+                        <button
+                            onclick="clearFilters()"
+                            class="px-4 py-2.5 rounded-xl border border-slate-200 text-sm font-medium hover:bg-slate-50 transition"
+                        >
+                            Clear
+                        </button>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- =================================================
+             KPI CARDS
+        ================================================== -->
+        <section class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-6 gap-4 mb-6">
+
+            <!-- Gross -->
+            <div data-aos="fade-up" data-aos-delay="50" class="kpi-card bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+
+                <div class="flex justify-between items-start">
+
+                    <div class="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
+                        <i data-lucide="wallet" class="w-5 h-5"></i>
+                    </div>
+
+                    <span class="text-[10px] font-bold uppercase text-slate-400">
+                        Payroll
+                    </span>
+
+                </div>
+
+                <div class="mt-5 text-xs text-slate-500">
+                    Total Gross Payroll
+                </div>
+
+                <div
+                    id="grossPayroll"
+                    data-value="0"
+                    class="counter text-xl font-bold text-slate-900 mt-1"
+                >
+                    ₱0
+                </div>
+
+            </div>
+
+
+            <!-- Net -->
+            <div data-aos="fade-up" data-aos-delay="100" class="kpi-card bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+
+                <div class="flex justify-between items-start">
+
+                    <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                        <i data-lucide="banknote" class="w-5 h-5"></i>
+                    </div>
+
+                    <span class="text-[10px] font-bold uppercase text-slate-400">
+                        Net
+                    </span>
+
+                </div>
+
+                <div class="mt-5 text-xs text-slate-500">
+                    Total Net Payroll
+                </div>
+
+                <div
+                    id="netPayroll"
+                    class="counter text-xl font-bold text-slate-900 mt-1"
+                >
+                    ₱0
+                </div>
+
+            </div>
+
+
+            <!-- Employees -->
+            <div data-aos="fade-up" data-aos-delay="150" class="kpi-card bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+
+                <div class="flex justify-between items-start">
+
+                    <div class="w-10 h-10 rounded-xl bg-violet-50 text-violet-600 flex items-center justify-center">
+                        <i data-lucide="users" class="w-5 h-5"></i>
+                    </div>
+
+                    <span class="text-[10px] font-bold uppercase text-slate-400">
+                        Workforce
+                    </span>
+
+                </div>
+
+                <div class="mt-5 text-xs text-slate-500">
+                    Employees
+                </div>
+
+                <div
+                    id="employeeCount"
+                    class="counter text-xl font-bold text-slate-900 mt-1"
+                >
+                    0
+                </div>
+
+            </div>
+
+
+            <!-- Exceptions -->
+            <div data-aos="fade-up" data-aos-delay="200" class="kpi-card bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+
+                <div class="flex justify-between items-start">
+
+                    <div class="w-10 h-10 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center">
+                        <i data-lucide="triangle-alert" class="w-5 h-5"></i>
+                    </div>
+
+                    <span class="text-[10px] font-bold uppercase text-slate-400">
+                        Attention
+                    </span>
+
+                </div>
+
+                <div class="mt-5 text-xs text-slate-500">
+                    Payroll Exceptions
+                </div>
+
+                <div
+                    id="exceptionCount"
+                    class="counter text-xl font-bold text-slate-900 mt-1"
+                >
+                    0
+                </div>
+
+            </div>
+
+
+            <!-- Accuracy -->
+            <div data-aos="fade-up" data-aos-delay="250" class="kpi-card bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+
+                <div class="flex justify-between items-start">
+
+                    <div class="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center">
+                        <i data-lucide="shield-check" class="w-5 h-5"></i>
+                    </div>
+
+                    <span class="text-[10px] font-bold uppercase text-slate-400">
+                        Control
+                    </span>
+
+                </div>
+
+                <div class="mt-5 text-xs text-slate-500">
+                    Payroll Accuracy
+                </div>
+
+                <div
+                    id="accuracy"
+                    class="counter text-xl font-bold text-slate-900 mt-1"
+                >
+                    0%
+                </div>
+
+            </div>
+
+
+            <!-- OT -->
+            <div data-aos="fade-up" data-aos-delay="300" class="kpi-card bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+
+                <div class="flex justify-between items-start">
+
+                    <div class="w-10 h-10 rounded-xl bg-cyan-50 text-cyan-600 flex items-center justify-center">
+                        <i data-lucide="clock-3" class="w-5 h-5"></i>
+                    </div>
+
+                    <span class="text-[10px] font-bold uppercase text-slate-400">
+                        Overtime
+                    </span>
+
+                </div>
+
+                <div class="mt-5 text-xs text-slate-500">
+                    Overtime Cost
+                </div>
+
+                <div
+                    id="overtimeCost"
+                    class="counter text-xl font-bold text-slate-900 mt-1"
+                >
+                    ₱0
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- =================================================
+             INSIGHT STRIP
+        ================================================== -->
+        <section
+            data-aos="fade-up"
+            class="bg-slate-900 rounded-2xl p-5 mb-6 text-white"
+        >
+
+            <div class="flex flex-col lg:flex-row lg:items-center gap-5">
+
+                <div class="w-12 h-12 rounded-xl bg-blue-600 flex items-center justify-center shrink-0">
+                    <i data-lucide="sparkles" class="w-6 h-6"></i>
+                </div>
+
+                <div class="flex-1">
+
+                    <div class="text-xs uppercase tracking-widest text-blue-300 font-bold">
+                        Analyst Insight
+                    </div>
+
+                    <div
+                        id="analystInsight"
+                        class="text-sm sm:text-base font-medium text-slate-200 mt-1"
+                    >
+                        Analyzing payroll data...
+                    </div>
+
+                </div>
+
+                <div class="flex items-center gap-2 text-xs text-slate-400">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400 pulse-dot"></span>
+                    Automated analysis
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- =================================================
+             MAIN CHARTS
+        ================================================== -->
+        <section class="grid grid-cols-1 xl:grid-cols-3 gap-6 mb-6">
+
+            <!-- Payroll Trend -->
+            <div
+                data-aos="fade-up"
+                class="xl:col-span-2 bg-white border border-slate-200 rounded-2xl shadow-sm"
+            >
+
+                <div class="p-5 border-b border-slate-100 flex items-center justify-between">
+
+                    <div>
+                        <h3 class="font-bold text-slate-900">
+                            Payroll Cost Trend
+                        </h3>
+
+                        <p class="text-xs text-slate-500 mt-1">
+                            Gross payroll vs net payroll by period
+                        </p>
+                    </div>
+
+                    <div class="p-2 rounded-lg bg-slate-50">
+                        <i data-lucide="trending-up" class="w-4 h-4 text-blue-600"></i>
+                    </div>
+
+                </div>
+
+                <div class="p-3">
+                    <div id="payrollTrendChart" class="chart-container"></div>
+                </div>
+
+            </div>
+
+
+            <!-- Reconciliation -->
+            <div
+                data-aos="fade-up"
+                class="bg-white border border-slate-200 rounded-2xl shadow-sm"
+            >
+
+                <div class="p-5 border-b border-slate-100">
+
+                    <h3 class="font-bold text-slate-900">
+                        Reconciliation
+                    </h3>
+
+                    <p class="text-xs text-slate-500 mt-1">
+                        Payroll record validation status
+                    </p>
+
+                </div>
+
+                <div id="reconciliationChart" class="chart-container"></div>
+
+                <div class="px-5 pb-5 space-y-2">
+
+                    <div class="flex justify-between text-sm">
+                        <span class="text-slate-500">Matched</span>
+                        <strong id="matchedCount">0</strong>
+                    </div>
+
+                    <div class="flex justify-between text-sm">
+                        <span class="text-slate-500">For Review</span>
+                        <strong id="reviewCount">0</strong>
+                    </div>
+
+                    <div class="flex justify-between text-sm">
+                        <span class="text-slate-500">Variance</span>
+                        <strong id="varianceCount">0</strong>
+                    </div>
+
+                    <div class="flex justify-between text-sm">
+                        <span class="text-slate-500">Resolved</span>
+                        <strong id="resolvedCount">0</strong>
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- =================================================
+             SECOND CHART ROW
+        ================================================== -->
+        <section class="grid grid-cols-1 xl:grid-cols-2 gap-6 mb-6">
+
+            <!-- Department -->
+            <div
+                data-aos="fade-up"
+                class="bg-white border border-slate-200 rounded-2xl shadow-sm"
+            >
+
+                <div class="p-5 border-b border-slate-100">
+
+                    <h3 class="font-bold text-slate-900">
+                        Payroll by Department
+                    </h3>
+
+                    <p class="text-xs text-slate-500 mt-1">
+                        Gross payroll distribution
+                    </p>
+
+                </div>
+
+                <div class="p-3">
+                    <div id="departmentChart" class="chart-container"></div>
+                </div>
+
+            </div>
+
+
+            <!-- Overtime -->
+            <div
+                data-aos="fade-up"
+                class="bg-white border border-slate-200 rounded-2xl shadow-sm"
+            >
+
+                <div class="p-5 border-b border-slate-100">
+
+                    <h3 class="font-bold text-slate-900">
+                        Overtime Analysis
+                    </h3>
+
+                    <p class="text-xs text-slate-500 mt-1">
+                        Overtime hours and cost by department
+                    </p>
+
+                </div>
+
+                <div class="p-3">
+                    <div id="overtimeChart" class="chart-container"></div>
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- =================================================
+             COMPLIANCE + BENEFITS
+        ================================================== -->
+        <section class="grid grid-cols-1 xl:grid-cols-3 gap-6 mb-6">
+
+            <!-- Compliance -->
+            <div
+                data-aos="fade-up"
+                class="bg-white border border-slate-200 rounded-2xl shadow-sm"
+            >
+
+                <div class="p-5 border-b border-slate-100">
+
+                    <h3 class="font-bold text-slate-900">
+                        Statutory Compliance
+                    </h3>
+
+                    <p class="text-xs text-slate-500 mt-1">
+                        SSS, PhilHealth, Pag-IBIG and tax monitoring
+                    </p>
+
+                </div>
+
+                <div class="p-5 space-y-5">
+
+                    <div>
+                        <div class="flex justify-between text-sm mb-2">
+                            <span>SSS</span>
+                            <strong id="sssCompliance">0%</strong>
+                        </div>
+
+                        <div class="h-2 bg-slate-100 rounded-full overflow-hidden">
+                            <div id="sssBar" class="h-full bg-blue-500 rounded-full transition-all duration-1000" style="width:0%"></div>
+                        </div>
+                    </div>
+
+
+                    <div>
+                        <div class="flex justify-between text-sm mb-2">
+                            <span>PhilHealth</span>
+                            <strong id="philhealthCompliance">0%</strong>
+                        </div>
+
+                        <div class="h-2 bg-slate-100 rounded-full overflow-hidden">
+                            <div id="philhealthBar" class="h-full bg-emerald-500 rounded-full transition-all duration-1000" style="width:0%"></div>
+                        </div>
+                    </div>
+
+
+                    <div>
+                        <div class="flex justify-between text-sm mb-2">
+                            <span>Pag-IBIG</span>
+                            <strong id="pagibigCompliance">0%</strong>
+                        </div>
+
+                        <div class="h-2 bg-slate-100 rounded-full overflow-hidden">
+                            <div id="pagibigBar" class="h-full bg-violet-500 rounded-full transition-all duration-1000" style="width:0%"></div>
+                        </div>
+                    </div>
+
+
+                    <div>
+                        <div class="flex justify-between text-sm mb-2">
+                            <span>Withholding Tax</span>
+                            <strong id="taxCompliance">0%</strong>
+                        </div>
+
+                        <div class="h-2 bg-slate-100 rounded-full overflow-hidden">
+                            <div id="taxBar" class="h-full bg-amber-500 rounded-full transition-all duration-1000" style="width:0%"></div>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- Benefits -->
+            <div
+                data-aos="fade-up"
+                class="xl:col-span-2 bg-white border border-slate-200 rounded-2xl shadow-sm"
+            >
+
+                <div class="p-5 border-b border-slate-100">
+
+                    <h3 class="font-bold text-slate-900">
+                        Benefits & Employer Cost
+                    </h3>
+
+                    <p class="text-xs text-slate-500 mt-1">
+                        Company benefits and contribution analysis
+                    </p>
+
+                </div>
+
+                <div class="p-3">
+                    <div id="benefitsChart" class="chart-container"></div>
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- =================================================
+             EXCEPTIONS
+        ================================================== -->
+        <section
+            data-aos="fade-up"
+            class="bg-white border border-slate-200 rounded-2xl shadow-sm mb-6"
+        >
+
+            <div class="p-5 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+
+                <div>
+
+                    <h3 class="font-bold text-slate-900">
+                        Payroll Exceptions
+                    </h3>
+
+                    <p class="text-xs text-slate-500 mt-1">
+                        Items requiring payroll analyst attention
+                    </p>
+
+                </div>
+
+                <div class="flex gap-2">
+
+                    <span class="px-3 py-1.5 rounded-lg bg-rose-50 text-rose-700 text-xs font-bold">
+                        <span id="openExceptions">0</span> Open
+                    </span>
+
+                    <span class="px-3 py-1.5 rounded-lg bg-amber-50 text-amber-700 text-xs font-bold">
+                        <span id="reviewExceptions">0</span> Review
+                    </span>
+
+                </div>
+
+            </div>
+
+
+            <div class="overflow-x-auto scrollbar">
+
+                <table class="w-full text-sm">
+
+                    <thead>
+                        <tr class="bg-slate-50 text-[11px] uppercase tracking-wider text-slate-500">
+                            <th class="text-left px-5 py-3 font-bold">Employee</th>
+                            <th class="text-left px-5 py-3 font-bold">Department</th>
+                            <th class="text-left px-5 py-3 font-bold">Exception</th>
+                            <th class="text-right px-5 py-3 font-bold">Amount</th>
+                            <th class="text-center px-5 py-3 font-bold">Severity</th>
+                            <th class="text-center px-5 py-3 font-bold">Status</th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="exceptionTable">
+                        <tr>
+                            <td colspan="6" class="text-center py-10 text-slate-400">
+                                Loading...
+                            </td>
+                        </tr>
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </section>
+
+
+        <!-- =================================================
+             RECENT PAYROLL
+        ================================================== -->
+        <section
+            data-aos="fade-up"
+            class="bg-white border border-slate-200 rounded-2xl shadow-sm"
+        >
+
+            <div class="p-5 border-b border-slate-100 flex items-center justify-between">
+
+                <div>
+
+                    <h3 class="font-bold text-slate-900">
+                        Recent Payroll Records
+                    </h3>
+
+                    <p class="text-xs text-slate-500 mt-1">
+                        Latest processed payroll transactions
+                    </p>
+
+                </div>
+
+                <span
+                    id="recordCount"
+                    class="text-xs font-semibold text-slate-500"
+                >
+                    0 records
+                </span>
+
+            </div>
+
+
+            <div class="overflow-x-auto scrollbar">
+
+                <table class="w-full text-sm">
+
+                    <thead>
+
+                        <tr class="bg-slate-50 text-[11px] uppercase tracking-wider text-slate-500">
+
+                            <th class="text-left px-5 py-3 font-bold">
+                                Employee
+                            </th>
+
+                            <th class="text-left px-5 py-3 font-bold">
+                                Department
+                            </th>
+
+                            <th class="text-left px-5 py-3 font-bold">
+                                Period
+                            </th>
+
+                            <th class="text-right px-5 py-3 font-bold">
+                                Gross
+                            </th>
+
+                            <th class="text-right px-5 py-3 font-bold">
+                                Deductions
+                            </th>
+
+                            <th class="text-right px-5 py-3 font-bold">
+                                Net Pay
+                            </th>
+
+                            <th class="text-center px-5 py-3 font-bold">
+                                Status
+                            </th>
+
+                        </tr>
+
+                    </thead>
+
+                    <tbody id="payrollTable">
+
+                        <tr>
+                            <td colspan="7" class="text-center py-10 text-slate-400">
+                                Loading...
+                            </td>
+                        </tr>
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </section>
+
+
+        <!-- Footer -->
+        <footer class="mt-8 pb-6 text-center text-xs text-slate-400">
+            Payroll Analyst Command Center • Synthetic Demo Data • Supabase
+        </footer>
+
+    </div>
+
+</main>
+
+
+<!-- =========================================================
+     LOADING OVERLAY
+========================================================= -->
+<div
+    id="loadingOverlay"
+    class="fixed inset-0 bg-slate-950/30 backdrop-blur-sm z-[100] hidden items-center justify-center"
+>
+
+    <div class="bg-white rounded-2xl shadow-2xl p-7 text-center w-72">
+
+        <div class="w-12 h-12 rounded-full border-4 border-slate-200 border-t-blue-600 animate-spin mx-auto"></div>
+
+        <div class="font-bold mt-5 text-slate-900">
+            Loading Payroll Data
+        </div>
+
+        <div class="text-xs text-slate-500 mt-1">
+            Connecting to Supabase...
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- =========================================================
+     JAVASCRIPT
+========================================================= -->
+<script>
+
+    /* ========================================================
+       SUPABASE CONFIGURATION
+
+       REPLACE THESE TWO VALUES
+    ======================================================== */
+
+    const SUPABASE_URL = "YOUR_SUPABASE_PROJECT_URL";
+
+    const SUPABASE_ANON_KEY = "YOUR_SUPABASE_ANON_OR_PUBLISHABLE_KEY";
+
+
+    /* ========================================================
+       SUPABASE CLIENT
+    ======================================================== */
+
+    const { createClient } = supabase;
+
+    const db = createClient(
+        SUPABASE_URL,
+        SUPABASE_ANON_KEY
+    );
+
+
+    /* ========================================================
+       GLOBAL DATA
+    ======================================================== */
+
+    let allPayrollData = [];
+    let filteredData = [];
+
+    let charts = {};
+
+
+    /* ========================================================
+       TAILWIND NAV STYLE
+    ======================================================== */
+
+    const style = document.createElement("style");
+
+    style.innerHTML = `
+        .nav-item {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            gap: .75rem;
+            padding: .65rem .75rem;
+            border-radius: .75rem;
+            color: #94a3b8;
+            font-size: .875rem;
+            font-weight: 500;
+            margin-bottom: .15rem;
+            transition: all .2s ease;
+        }
+
+        .nav-item svg {
+            width: 1rem;
+            height: 1rem;
+        }
+
+        .nav-item:hover {
+            color: white;
+            background: rgba(255,255,255,.06);
+        }
+    `;
+
+    document.head.appendChild(style);
+
+
+    /* ========================================================
+       INITIALIZE
+    ======================================================== */
+
+    document.addEventListener("DOMContentLoaded", async () => {
+
+        AOS.init({
+            duration: 600,
+            once: true,
+            offset: 20
+        });
+
+        lucide.createIcons();
+
+        await loadDashboard();
+
+    });
+
+
+    /* ========================================================
+       LOAD DATA
+    ======================================================== */
+
+    async function loadDashboard() {
+
+        showLoading(true);
+
+        const refreshBtn = document.getElementById("refreshBtn");
+
+        if (refreshBtn) {
+            refreshBtn.disabled = true;
+            refreshBtn.classList.add("opacity-60");
+        }
+
+        try {
+
+            const { data, error } = await db
+                .from("payroll_demo")
+                .select("*")
+                .order("payroll_period", { ascending: true })
+                .order("employee_id", { ascending: true });
+
+            if (error) {
+                throw error;
+            }
+
+            allPayrollData = data || [];
+
+            populateFilters();
+
+            applyFilters();
+
+            document.getElementById("lastRefresh").textContent =
+                "Updated " + new Date().toLocaleTimeString([], {
+                    hour: "2-digit",
+                    minute: "2-digit"
+                });
+
+        } catch (error) {
+
+            console.error("Supabase error:", error);
+
+            showError(
+                "Unable to load payroll data. Check your Supabase URL, anon key, table name, and RLS SELECT policy."
+            );
+
+        } finally {
+
+            showLoading(false);
+
+            if (refreshBtn) {
+                refreshBtn.disabled = false;
+                refreshBtn.classList.remove("opacity-60");
+            }
+
+        }
+
+    }
+
+
+    /* ========================================================
+       FILTERS
+    ======================================================== */
+
+    function populateFilters() {
+
+        const periodSelect = document.getElementById("periodFilter");
+        const departmentSelect = document.getElementById("departmentFilter");
+
+        const periods = [
+            ...new Set(
+                allPayrollData.map(row => row.payroll_period)
+            )
+        ].sort().reverse();
+
+        const departments = [
+            ...new Set(
+                allPayrollData.map(row => row.department)
+            )
+        ].filter(Boolean).sort();
+
+        periodSelect.innerHTML =
+            `<option value="all">All Periods</option>` +
+            periods.map(period =>
+                `<option value="${escapeHtml(period)}">
+                    ${formatDate(period)}
+                </option>`
+            ).join("");
+
+        departmentSelect.innerHTML =
+            `<option value="all">All Departments</option>` +
+            departments.map(dept =>
+                `<option value="${escapeHtml(dept)}">
+                    ${escapeHtml(dept)}
+                </option>`
+            ).join("");
+
+    }
+
+
+    function applyFilters() {
+
+        const period =
+            document.getElementById("periodFilter").value;
+
+        const department =
+            document.getElementById("departmentFilter").value;
+
+        filteredData = allPayrollData.filter(row => {
+
+            const periodMatch =
+                period === "all" ||
+                row.payroll_period === period;
+
+            const departmentMatch =
+                department === "all" ||
+                row.department === department;
+
+            return periodMatch && departmentMatch;
+
+        });
+
+        updateDashboard(filteredData);
+
+    }
+
+
+    function clearFilters() {
+
+        document.getElementById("periodFilter").value = "all";
+        document.getElementById("departmentFilter").value = "all";
+
+        applyFilters();
+
+    }
+
+
+    /* ========================================================
+       UPDATE DASHBOARD
+    ======================================================== */
+
+    function updateDashboard(data) {
+
+        updateKPIs(data);
+
+        updateInsight(data);
+
+        updatePayrollTrend(data);
+
+        updateReconciliation(data);
+
+        updateDepartmentChart(data);
+
+        updateOvertimeChart(data);
+
+        updateBenefitsChart(data);
+
+        updateCompliance(data);
+
+        updateExceptions(data);
+
+        updateRecentPayroll(data);
+
+        lucide.createIcons();
+
+    }
+
+
+    /* ========================================================
+       KPI
+    ======================================================== */
+
+    function updateKPIs(data) {
+
+        const gross =
+            sum(data, "gross_pay");
+
+        const net =
+            sum(data, "net_pay");
+
+        const overtime =
+            sum(data, "overtime_pay");
+
+        const employees =
+            new Set(
+                data.map(row => row.employee_id)
+            ).size;
+
+        const exceptions =
+            data.filter(row =>
+                row.exception_type &&
+                row.exception_type !== "None"
+            ).length;
+
+        const matched =
+            data.filter(row =>
+                row.reconciliation_status === "Matched" ||
+                row.reconciliation_status === "Resolved"
+            ).length;
+
+        const accuracy =
+            data.length
+                ? (matched / data.length) * 100
+                : 0;
+
+        animateCurrency(
+            "grossPayroll",
+            gross
+        );
+
+        animateCurrency(
+            "netPayroll",
+            net
+        );
+
+        animateNumber(
+            "employeeCount",
+            employees
+        );
+
+        animateNumber(
+            "exceptionCount",
+            exceptions
+        );
+
+        animatePercentage(
+            "accuracy",
+            accuracy
+        );
+
+        animateCurrency(
+            "overtimeCost",
+            overtime
+        );
+
+    }
+
+
+    /* ========================================================
+       ANALYST INSIGHT
+    ======================================================== */
+
+    function updateInsight(data) {
+
+        if (!data.length) {
+
+            document.getElementById("analystInsight").textContent =
+                "No payroll records match the selected filters.";
+
+            return;
+        }
+
+        const gross = sum(data, "gross_pay");
+
+        const overtime = sum(data, "overtime_pay");
+
+        const exceptions = data.filter(row =>
+            row.exception_type &&
+            row.exception_type !== "None"
+        ).length;
+
+        const variance = data.filter(row =>
+            row.reconciliation_status === "Variance"
+        ).length;
+
+        const overtimePercentage =
+            gross ? (overtime / gross) * 100 : 0;
+
+        let message =
+            `${formatNumber(data.length)} payroll records analyzed. `;
+
+        if (variance > 0) {
+
+            message +=
+                `${formatNumber(variance)} records currently show reconciliation variance. `;
+
+        }
+
+        message +=
+            `Overtime represents ${overtimePercentage.toFixed(1)}% of gross payroll. `;
+
+        if (exceptions > 0) {
+
+            message +=
+                `${formatNumber(exceptions)} exception records require monitoring.`;
+
+        } else {
+
+            message +=
+                `No payroll exceptions were detected for the selected scope.`;
+
+        }
+
+        document.getElementById("analystInsight").textContent = message;
+
+    }
+
+
+    /* ========================================================
+       PAYROLL TREND
+    ======================================================== */
+
+    function updatePayrollTrend(data) {
+
+        const grouped = {};
+
+        data.forEach(row => {
+
+            const period = row.payroll_period;
+
+            if (!grouped[period]) {
+
+                grouped[period] = {
+                    gross: 0,
+                    net: 0
+                };
+
+            }
+
+            grouped[period].gross += num(row.gross_pay);
+            grouped[period].net += num(row.net_pay);
+
+        });
+
+        const periods = Object.keys(grouped).sort();
+
+        const categories =
+            periods.map(formatDate);
+
+        const gross =
+            periods.map(p => grouped[p].gross);
+
+        const net =
+            periods.map(p => grouped[p].net);
+
+
+        destroyChart("payrollTrend");
+
+        charts.payrollTrend =
+            Highcharts.chart("payrollTrendChart", {
+
+                chart: {
+                    type: "areaspline",
+                    backgroundColor: "transparent",
+                    height: 330
+                },
+
+                title: {
+                    text: null
+                },
+
+                credits: {
+                    enabled: false
+                },
+
+                exporting: {
+                    enabled: false
+                },
+
+                xAxis: {
+                    categories,
+                    lineColor: "#e2e8f0",
+                    tickColor: "#e2e8f0"
+                },
+
+                yAxis: {
+                    title: {
+                        text: null
+                    },
+
+                    labels: {
+                        formatter: function () {
+                            return "₱" + compactCurrency(this.value);
+                        }
+                    },
+
+                    gridLineColor: "#f1f5f9"
+                },
+
+                tooltip: {
+                    shared: true,
+                    valueDecimals: 0,
+
+                    valuePrefix: "₱",
+
+                    valueFormatter: function () {
+                        return formatCurrency(this.value);
+                    }
+                },
+
+                legend: {
+                    align: "left",
+                    verticalAlign: "top"
+                },
+
+                plotOptions: {
+
+                    areaspline: {
+                        fillOpacity: .12,
+                        lineWidth: 3,
+                        marker: {
+                            radius: 3
+                        }
+                    }
+
+                },
+
+                series: [
+
+                    {
+                        name: "Gross Payroll",
+                        data: gross,
+                        color: "#2563eb"
+                    },
+
+                    {
+                        name: "Net Payroll",
+                        data: net,
+                        color: "#10b981"
+                    }
+
+                ]
+
+            });
+
+    }
+
+
+    /* ========================================================
+       RECONCILIATION
+    ======================================================== */
+
+    function updateReconciliation(data) {
+
+        const statuses = [
+            "Matched",
+            "For Review",
+            "Variance",
+            "Resolved"
+        ];
+
+        const counts = statuses.map(status =>
+            data.filter(row =>
+                row.reconciliation_status === status
+            ).length
+        );
+
+        document.getElementById("matchedCount").textContent =
+            formatNumber(counts[0]);
+
+        document.getElementById("reviewCount").textContent =
+            formatNumber(counts[1]);
+
+        document.getElementById("varianceCount").textContent =
+            formatNumber(counts[2]);
+
+        document.getElementById("resolvedCount").textContent =
+            formatNumber(counts[3]);
+
+
+        destroyChart("reconciliation");
+
+        charts.reconciliation =
+            Highcharts.chart("reconciliationChart", {
+
+                chart: {
+                    type: "pie",
+                    backgroundColor: "transparent",
+                    height: 270
+                },
+
+                title: {
+                    text:
+                        data.length
+                            ? Math.round(
+                                (
+                                    (counts[0] + counts[3])
+                                    / data.length
+                                ) * 100
+                              ) + "%"
+                            : "0%",
+
+                    align: "center",
+                    verticalAlign: "middle",
+                    y: 25,
+
+                    style: {
+                        fontSize: "28px",
+                        fontWeight: "800",
+                        color: "#0f172a"
+                    }
+                },
+
+                subtitle: {
+                    text: "Clean / Resolved",
+                    align: "center",
+                    verticalAlign: "middle",
+                    y: 50,
+
+                    style: {
+                        fontSize: "10px",
+                        color: "#64748b"
+                    }
+                },
+
+                credits: {
+                    enabled: false
+                },
+
+                exporting: {
+                    enabled: false
+                },
+
+                tooltip: {
+                    pointFormat:
+                        "<b>{point.y}</b> records"
+                },
+
+                plotOptions: {
+
+                    pie: {
+
+                        innerSize: "72%",
+
+                        borderWidth: 0,
+
+                        dataLabels: {
+                            enabled: false
+                        },
+
+                        showInLegend: true
+
+                    }
+
+                },
+
+                legend: {
+                    enabled: false
+                },
+
+                series: [
+
+                    {
+                        name: "Status",
+
+                        data: [
+
+                            {
+                                name: "Matched",
+                                y: counts[0],
+                                color: "#10b981"
+                            },
+
+                            {
+                                name: "For Review",
+                                y: counts[1],
+                                color: "#f59e0b"
+                            },
+
+                            {
+                                name: "Variance",
+                                y: counts[2],
+                                color: "#ef4444"
+                            },
+
+                            {
+                                name: "Resolved",
+                                y: counts[3],
+                                color: "#3b82f6"
+                            }
+
+                        ]
+
+                    }
+
+                ]
+
+            });
+
+    }
+
+
+    /* ========================================================
+       DEPARTMENT CHART
+    ======================================================== */
+
+    function updateDepartmentChart(data) {
+
+        const grouped = {};
+
+        data.forEach(row => {
+
+            const dept = row.department || "Unknown";
+
+            grouped[dept] =
+                (grouped[dept] || 0) +
+                num(row.gross_pay);
+
+        });
+
+        const entries =
+            Object.entries(grouped)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 10);
+
+
+        destroyChart("department");
+
+        charts.department =
+            Highcharts.chart("departmentChart", {
+
+                chart: {
+                    type: "bar",
+                    backgroundColor: "transparent",
+                    height: 350
+                },
+
+                title: {
+                    text: null
+                },
+
+                credits: {
+                    enabled: false
+                },
+
+                exporting: {
+                    enabled: false
+                },
+
+                xAxis: {
+                    categories:
+                        entries.map(item => item[0]),
+
+                    lineColor: "#e2e8f0"
+                },
+
+                yAxis: {
+
+                    title: {
+                        text: null
+                    },
+
+                    labels: {
+                        formatter: function () {
+                            return "₱" +
+                                compactCurrency(this.value);
+                        }
+                    },
+
+                    gridLineColor: "#f1f5f9"
+
+                },
+
+                tooltip: {
+
+                    formatter: function () {
+
+                        return `
+                            <b>${this.category}</b><br>
+                            Gross Payroll:
+                            <b>${formatCurrency(this.y)}</b>
+                        `;
+
+                    }
+
+                },
+
+                legend: {
+                    enabled: false
+                },
+
+                plotOptions: {
+
+                    bar: {
+
+                        borderRadius: 5,
+
+                        dataLabels: {
+                            enabled: false
+                        }
+
+                    }
+
+                },
+
+                series: [
+
+                    {
+                        name: "Gross Payroll",
+
+                        data:
+                            entries.map(item => item[1]),
+
+                        color: "#2563eb"
+
+                    }
+
+                ]
+
+            });
+
+    }
+
+
+    /* ========================================================
+       OVERTIME CHART
+    ======================================================== */
+
+    function updateOvertimeChart(data) {
+
+        const grouped = {};
+
+        data.forEach(row => {
+
+            const dept = row.department || "Unknown";
+
+            if (!grouped[dept]) {
+
+                grouped[dept] = {
+                    hours: 0,
+                    cost: 0
+                };
+
+            }
+
+            grouped[dept].hours +=
+                num(row.overtime_hours);
+
+            grouped[dept].cost +=
+                num(row.overtime_pay);
+
+        });
+
+        const entries =
+            Object.entries(grouped)
+                .sort((a, b) =>
+                    b[1].cost - a[1].cost
+                )
+                .slice(0, 8);
+
+
+        destroyChart("overtime");
+
+        charts.overtime =
+            Highcharts.chart("overtimeChart", {
+
+                chart: {
+                    type: "column",
+                    backgroundColor: "transparent",
+                    height: 350
+                },
+
+                title: {
+                    text: null
+                },
+
+                credits: {
+                    enabled: false
+                },
+
+                exporting: {
+                    enabled: false
+                },
+
+                xAxis: {
+                    categories:
+                        entries.map(item => item[0]),
+
+                    labels: {
+                        rotation: -35,
+                        style: {
+                            fontSize: "10px"
+                        }
+                    }
+                },
+
+                yAxis: [
+
+                    {
+
+                        title: {
+                            text: "OT Hours"
+                        },
+
+                        gridLineColor: "#f1f5f9"
+
+                    },
+
+                    {
+
+                        title: {
+                            text: "OT Cost"
+                        },
+
+                        opposite: true
+
+                    }
+
+                ],
+
+                tooltip: {
+                    shared: true
+                },
+
+                series: [
+
+                    {
+
+                        name: "OT Hours",
+
+                        data:
+                            entries.map(item =>
+                                Number(item[1].hours.toFixed(1))
+                            ),
+
+                        color: "#06b6d4"
+
+                    },
+
+                    {
+
+                        name: "OT Cost",
+
+                        yAxis: 1,
+
+                        data:
+                            entries.map(item =>
+                                Number(item[1].cost.toFixed(2))
+                            ),
+
+                        color: "#8b5cf6"
+
+                    }
+
+                ]
+
+            });
+
+    }
+
+
+    /* ========================================================
+       BENEFITS
+    ======================================================== */
+
+    function updateBenefitsChart(data) {
+
+        const hmo =
+            sum(data, "hmo_cost");
+
+        const retirement =
+            sum(data, "retirement_contribution");
+
+        const employer =
+            sum(data, "employer_contribution");
+
+
+        destroyChart("benefits");
+
+        charts.benefits =
+            Highcharts.chart("benefitsChart", {
+
+                chart: {
+                    type: "column",
+                    backgroundColor: "transparent",
+                    height: 330
+                },
+
+                title: {
+                    text: null
+                },
+
+                credits: {
+                    enabled: false
+                },
+
+                exporting: {
+                    enabled: false
+                },
+
+                xAxis: {
+                    categories: [
+                        "HMO",
+                        "Retirement",
+                        "Employer Contributions"
+                    ]
+                },
+
+                yAxis: {
+
+                    title: {
+                        text: null
+                    },
+
+                    labels: {
+
+                        formatter: function () {
+
+                            return "₱" +
+                                compactCurrency(this.value);
+
+                        }
+
+                    },
+
+                    gridLineColor: "#f1f5f9"
+
+                },
+
+                tooltip: {
+
+                    pointFormat:
+                        "<b>₱{point.y:,.2f}</b>"
+
+                },
+
+                legend: {
+                    enabled: false
+                },
+
+                series: [
+
+                    {
+
+                        name: "Benefits Cost",
+
+                        data: [
+                            hmo,
+                            retirement,
+                            employer
+                        ],
+
+                        color: "#8b5cf6"
+
+                    }
+
+                ]
+
+            });
+
+    }
+
+
+    /* ========================================================
+       COMPLIANCE
+    ======================================================== */
+
+    function updateCompliance(data) {
+
+        if (!data.length) {
+
+            setCompliance(
+                "sss",
+                "sssBar",
+                0
+            );
+
+            setCompliance(
+                "philhealth",
+                "philhealthBar",
+                0
+            );
+
+            setCompliance(
+                "pagibig",
+                "pagibigBar",
+                0
+            );
+
+            setCompliance(
+                "tax",
+                "taxBar",
+                0
+            );
+
+            return;
+
+        }
+
+        const compliant =
+            data.filter(row =>
+                row.compliance_status === "Compliant"
+            ).length;
+
+        const percentage =
+            (compliant / data.length) * 100;
+
+
+        /*
+            For demo purposes the overall compliance
+            status is used for all statutory indicators.
+
+            This keeps the dashboard connected to the
+            existing single-table design.
+        */
+
+        setCompliance(
+            "sss",
+            "sssBar",
+            percentage
+        );
+
+        setCompliance(
+            "philhealth",
+            "philhealthBar",
+            percentage
+        );
+
+        setCompliance(
+            "pagibig",
+            "pagibigBar",
+            percentage
+        );
+
+        setCompliance(
+            "tax",
+            "taxBar",
+            percentage
+        );
+
+    }
+
+
+    function setCompliance(
+        labelId,
+        barId,
+        value
+    ) {
+
+        const safe =
+            Math.max(
+                0,
+                Math.min(
+                    100,
+                    value
+                )
+            );
+
+        document.getElementById(labelId + "Compliance")
+            .textContent =
+            safe.toFixed(1) + "%";
+
+        setTimeout(() => {
+
+            document.getElementById(barId)
+                .style.width =
+                safe + "%";
+
+        }, 100);
+
+    }
+
+
+    /* ========================================================
+       EXCEPTIONS
+    ======================================================== */
+
+    function updateExceptions(data) {
+
+        const exceptions =
+            data
+                .filter(row =>
+                    row.exception_type &&
+                    row.exception_type !== "None"
+                )
+                .sort((a, b) =>
+                    num(b.exception_amount) -
+                    num(a.exception_amount)
+                );
+
+
+        const open =
+            exceptions.filter(row =>
+                row.exception_status === "Open"
+            ).length;
+
+        const review =
+            exceptions.filter(row =>
+                row.exception_status === "Investigating" ||
+                row.exception_status === "For Review"
+            ).length;
+
+
+        document.getElementById("openExceptions")
+            .textContent = formatNumber(open);
+
+        document.getElementById("reviewExceptions")
+            .textContent = formatNumber(review);
+
+
+        const rows =
+            exceptions.slice(0, 8);
+
+
+        const tbody =
+            document.getElementById("exceptionTable");
+
+
+        if (!rows.length) {
+
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="6"
+                        class="text-center py-10 text-emerald-600">
+                        <div class="flex flex-col items-center">
+                            <i data-lucide="circle-check" class="w-7 h-7 mb-2"></i>
+                            <span class="font-semibold">
+                                No exceptions found
+                            </span>
+                        </div>
+                    </td>
+                </tr>
+            `;
+
+            lucide.createIcons();
+
+            return;
+
+        }
+
+
+        tbody.innerHTML =
+            rows.map(row => `
+
+                <tr class="table-row-hover border-b border-slate-100">
+
+                    <td class="px-5 py-4">
+
+                        <div class="font-semibold text-slate-800">
+                            ${escapeHtml(row.employee_name)}
+                        </div>
+
+                        <div class="text-[10px] text-slate-400">
+                            ${escapeHtml(row.employee_id)}
+                        </div>
+
+                    </td>
+
+                    <td class="px-5 py-4 text-slate-500">
+                        ${escapeHtml(row.department)}
+                    </td>
+
+                    <td class="px-5 py-4">
+
+                        <div class="font-medium">
+                            ${escapeHtml(row.exception_type)}
+                        </div>
+
+                        <div class="text-[10px] text-slate-400 max-w-xs">
+                            ${escapeHtml(
+                                row.exception_description || ""
+                            )}
+                        </div>
+
+                    </td>
+
+                    <td class="px-5 py-4 text-right font-semibold">
+                        ${formatCurrency(
+                            row.exception_amount
+                        )}
+                    </td>
+
+                    <td class="px-5 py-4 text-center">
+                        ${severityBadge(
+                            row.exception_severity
+                        )}
+                    </td>
+
+                    <td class="px-5 py-4 text-center">
+                        ${statusBadge(
+                            row.exception_status
+                        )}
+                    </td>
+
+                </tr>
+
+            `).join("");
+
+    }
+
+
+    /* ========================================================
+       RECENT PAYROLL
+    ======================================================== */
+
+    function updateRecentPayroll(data) {
+
+        const rows =
+            [...data]
+                .sort((a, b) => {
+
+                    const dateA =
+                        new Date(
+                            a.payroll_period
+                        );
+
+                    const dateB =
+                        new Date(
+                            b.payroll_period
+                        );
+
+                    return dateB - dateA;
+
+                })
+                .slice(0, 10);
+
+
+        document.getElementById("recordCount")
+            .textContent =
+            formatNumber(data.length) +
+            " records";
+
+
+        const tbody =
+            document.getElementById("payrollTable");
+
+
+        if (!rows.length) {
+
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="7"
+                        class="text-center py-10 text-slate-400">
+                        No payroll records found.
+                    </td>
+                </tr>
+            `;
+
+            return;
+
+        }
+
+
+        tbody.innerHTML =
+            rows.map(row => `
+
+                <tr class="table-row-hover border-b border-slate-100">
+
+                    <td class="px-5 py-4">
+
+                        <div class="font-semibold text-slate-800">
+                            ${escapeHtml(row.employee_name)}
+                        </div>
+
+                        <div class="text-[10px] text-slate-400">
+                            ${escapeHtml(row.employee_id)}
+                        </div>
+
+                    </td>
+
+                    <td class="px-5 py-4 text-slate-500">
+                        ${escapeHtml(row.department)}
+                    </td>
+
+                    <td class="px-5 py-4 text-slate-500">
+                        ${formatDate(row.payroll_period)}
+                    </td>
+
+                    <td class="px-5 py-4 text-right font-medium">
+                        ${formatCurrency(row.gross_pay)}
+                    </td>
+
+                    <td class="px-5 py-4 text-right text-rose-600">
+                        ${formatCurrency(row.total_deductions)}
+                    </td>
+
+                    <td class="px-5 py-4 text-right font-bold text-slate-900">
+                        ${formatCurrency(row.net_pay)}
+                    </td>
+
+                    <td class="px-5 py-4 text-center">
+                        ${payrollStatusBadge(
+                            row.payroll_status
+                        )}
+                    </td>
+
+                </tr>
+
+            `).join("");
+
+    }
+
+
+    /* ========================================================
+       BADGES
+    ======================================================== */
+
+    function severityBadge(value) {
+
+        const map = {
+
+            Critical:
+                "bg-red-100 text-red-700",
+
+            High:
+                "bg-rose-100 text-rose-700",
+
+            Medium:
+                "bg-amber-100 text-amber-700",
+
+            Low:
+                "bg-slate-100 text-slate-600"
+
+        };
+
+        return `
+            <span class="inline-flex px-2.5 py-1 rounded-lg text-[10px] font-bold ${
+                map[value] ||
+                "bg-slate-100 text-slate-600"
+            }">
+                ${escapeHtml(value || "Low")}
+            </span>
+        `;
+
+    }
+
+
+    function statusBadge(value) {
+
+        const map = {
+
+            Open:
+                "bg-rose-100 text-rose-700",
+
+            Investigating:
+                "bg-amber-100 text-amber-700",
+
+            Resolved:
+                "bg-emerald-100 text-emerald-700",
+
+            Waived:
+                "bg-slate-100 text-slate-600"
+
+        };
+
+        return `
+            <span class="inline-flex px-2.5 py-1 rounded-lg text-[10px] font-bold ${
+                map[value] ||
+                "bg-slate-100 text-slate-600"
+            }">
+                ${escapeHtml(value || "Unknown")}
+            </span>
+        `;
+
+    }
+
+
+    function payrollStatusBadge(value) {
+
+        const map = {
+
+            Processed:
+                "bg-emerald-100 text-emerald-700",
+
+            Approved:
+                "bg-blue-100 text-blue-700",
+
+            "For Review":
+                "bg-amber-100 text-amber-700",
+
+            Processing:
+                "bg-violet-100 text-violet-700",
+
+            Draft:
+                "bg-slate-100 text-slate-600",
+
+            Released:
+                "bg-cyan-100 text-cyan-700"
+
+        };
+
+        return `
+            <span class="inline-flex px-2.5 py-1 rounded-lg text-[10px] font-bold ${
+                map[value] ||
+                "bg-slate-100 text-slate-600"
+            }">
+                ${escapeHtml(value || "Unknown")}
+            </span>
+        `;
+
+    }
+
+
+    /* ========================================================
+       ANIMATION HELPERS
+    ======================================================== */
+
+    function animateNumber(
+        id,
+        value
+    ) {
+
+        const el =
+            document.getElementById(id);
+
+        const obj = {
+            value: 0
+        };
+
+        gsap.to(
+            obj,
+            {
+
+                value,
+
+                duration: 1.2,
+
+                ease: "power2.out",
+
+                onUpdate: () => {
+
+                    el.textContent =
+                        Math.round(
+                            obj.value
+                        ).toLocaleString();
+
+                }
+
+            }
+        );
+
+    }
+
+
+    function animateCurrency(
+        id,
+        value
+    ) {
+
+        const el =
+            document.getElementById(id);
+
+        const obj = {
+            value: 0
+        };
+
+        gsap.to(
+            obj,
+            {
+
+                value,
+
+                duration: 1.3,
+
+                ease: "power2.out",
+
+                onUpdate: () => {
+
+                    el.textContent =
+                        formatCurrency(
+                            obj.value
+                        );
+
+                }
+
+            }
+        );
+
+    }
+
+
+    function animatePercentage(
+        id,
+        value
+    ) {
+
+        const el =
+            document.getElementById(id);
+
+        const obj = {
+            value: 0
+        };
+
+        gsap.to(
+            obj,
+            {
+
+                value,
+
+                duration: 1.2,
+
+                ease: "power2.out",
+
+                onUpdate: () => {
+
+                    el.textContent =
+                        obj.value.toFixed(1) + "%";
+
+                }
+
+            }
+        );
+
+    }
+
+
+    /* ========================================================
+       UTILITY FUNCTIONS
+    ======================================================== */
+
+    function num(value) {
+
+        const n =
+            Number(value);
+
+        return Number.isFinite(n)
+            ? n
+            : 0;
+
+    }
+
+
+    function sum(
+        data,
+        field
+    ) {
+
+        return data.reduce(
+            (total, row) =>
+                total + num(row[field]),
+            0
+        );
+
+    }
+
+
+    function formatCurrency(
+        value
+    ) {
+
+        return new Intl.NumberFormat(
+            "en-PH",
+            {
+
+                style: "currency",
+
+                currency: "PHP",
+
+                minimumFractionDigits: 0,
+
+                maximumFractionDigits: 0
+
+            }
+        ).format(num(value));
+
+    }
+
+
+    function compactCurrency(
+        value
+    ) {
+
+        const n = num(value);
+
+        if (n >= 1000000) {
+
+            return (
+                n / 1000000
+            ).toFixed(1) + "M";
+
+        }
+
+        if (n >= 1000) {
+
+            return (
+                n / 1000
+            ).toFixed(0) + "K";
+
+        }
+
+        return n.toString();
+
+    }
+
+
+    function formatNumber(
+        value
+    ) {
+
+        return num(value)
+            .toLocaleString(
+                "en-US"
+            );
+
+    }
+
+
+    function formatDate(
+        dateString
+    ) {
+
+        if (!dateString)
+            return "—";
+
+        const date =
+            new Date(
+                dateString + "T00:00:00"
+            );
+
+        if (isNaN(date))
+            return dateString;
+
+        return date.toLocaleDateString(
+            "en-PH",
+            {
+
+                month: "short",
+
+                day: "numeric",
+
+                year: "numeric"
+
+            }
+        );
+
+    }
+
+
+    function escapeHtml(
+        value
+    ) {
+
+        if (
+            value === null ||
+            value === undefined
+        ) {
+
+            return "";
+
+        }
+
+        return String(value)
+            .replaceAll("&", "&amp;")
+            .replaceAll("<", "&lt;")
+            .replaceAll(">", "&gt;")
+            .replaceAll('"', "&quot;")
+            .replaceAll("'", "&#039;");
+
+    }
+
+
+    function destroyChart(
+        name
+    ) {
+
+        if (
+            charts[name] &&
+            typeof charts[name].destroy === "function"
+        ) {
+
+            charts[name].destroy();
+
+        }
+
+    }
+
+
+    /* ========================================================
+       SIDEBAR
+    ======================================================== */
+
+    function toggleSidebar() {
+
+        const sidebar =
+            document.getElementById("sidebar");
+
+        const overlay =
+            document.getElementById("mobileOverlay");
+
+        sidebar.classList.toggle("open");
+
+        overlay.classList.toggle(
+            "hidden"
+        );
+
+    }
+
+
+    /* ========================================================
+       LOADING
+    ======================================================== */
+
+    function showLoading(
+        visible
+    ) {
+
+        const overlay =
+            document.getElementById(
+                "loadingOverlay"
+            );
+
+        if (visible) {
+
+            overlay.classList.remove(
+                "hidden"
+            );
+
+            overlay.classList.add(
+                "flex"
+            );
+
+        } else {
+
+            overlay.classList.add(
+                "hidden"
+            );
+
+            overlay.classList.remove(
+                "flex"
+            );
+
+        }
+
+    }
+
+
+    /* ========================================================
+       ERROR
+    ======================================================== */
+
+    function showError(
+        message
+    ) {
+
+        const insight =
+            document.getElementById(
+                "analystInsight"
+            );
+
+        insight.textContent =
+            message;
+
+        insight.classList.add(
+            "text-rose-300"
+        );
+
+        document.getElementById(
+            "lastRefresh"
+        ).textContent =
+            "Connection error";
+
+    }
+
+</script>
+
+</body>
+</html>
