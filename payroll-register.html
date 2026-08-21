@@ -1,0 +1,4064 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Payroll Register | Payroll Analyst Command Center</title>
+
+    <!-- =====================================================
+         TAILWIND
+    ====================================================== -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- =====================================================
+         SUPABASE
+    ====================================================== -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <!-- =====================================================
+         HIGHCHARTS
+    ====================================================== -->
+    <script src="https://code.highcharts.com/highcharts.js"></script>
+    <script src="https://code.highcharts.com/modules/exporting.js"></script>
+    <script src="https://code.highcharts.com/modules/accessibility.js"></script>
+
+    <!-- =====================================================
+         GSAP
+    ====================================================== -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+
+    <!-- =====================================================
+         AOS
+    ====================================================== -->
+    <link
+        rel="stylesheet"
+        href="https://unpkg.com/aos@2.3.4/dist/aos.css"
+    />
+
+    <script src="https://unpkg.com/aos@2.3.4/dist/aos.js"></script>
+
+    <!-- =====================================================
+         LUCIDE
+    ====================================================== -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- =====================================================
+         FONT
+    ====================================================== -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;500;600;700;800&display=swap"
+        rel="stylesheet"
+    >
+
+    <style>
+
+        * {
+            font-family: "Inter", sans-serif;
+        }
+
+        body {
+            background: #f8fafc;
+        }
+
+        .sidebar {
+            transition: transform .3s ease;
+        }
+
+        .glass {
+            background: rgba(255,255,255,.90);
+            backdrop-filter: blur(12px);
+        }
+
+        .scrollbar::-webkit-scrollbar {
+            width: 5px;
+            height: 5px;
+        }
+
+        .scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 20px;
+        }
+
+        .table-row {
+            transition: all .18s ease;
+        }
+
+        .table-row:hover {
+            background: #f8fafc;
+        }
+
+        .modal-backdrop {
+            backdrop-filter: blur(5px);
+        }
+
+        .chart-container {
+            width: 100%;
+            min-height: 280px;
+        }
+
+        .pulse-dot {
+            animation: pulseDot 2s infinite;
+        }
+
+        @keyframes pulseDot {
+
+            0%,100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+
+            50% {
+                opacity: .45;
+                transform: scale(.8);
+            }
+
+        }
+
+        @media(max-width:1024px) {
+
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+        }
+
+        .sort-icon {
+            transition: transform .2s ease;
+        }
+
+    </style>
+</head>
+
+
+<body class="text-slate-800">
+
+
+<!-- =========================================================
+     MOBILE OVERLAY
+========================================================= -->
+
+<div
+    id="mobileOverlay"
+    class="fixed inset-0 bg-slate-950/40 backdrop-blur-sm z-40 hidden lg:hidden"
+    onclick="toggleSidebar()"
+></div>
+
+
+<!-- =========================================================
+     SIDEBAR
+========================================================= -->
+
+<aside
+    id="sidebar"
+    class="sidebar fixed left-0 top-0 bottom-0 w-72 bg-slate-950 text-white z-50 flex flex-col"
+>
+
+    <!-- Logo -->
+
+    <div class="h-20 px-6 flex items-center border-b border-white/10">
+
+        <div
+            class="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center mr-3"
+        >
+            <i data-lucide="wallet-cards" class="w-5 h-5"></i>
+        </div>
+
+        <div>
+
+            <div class="font-bold text-sm">
+                PAYROLL ANALYST
+            </div>
+
+            <div class="text-[11px] text-slate-400">
+                Command Center
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- Navigation -->
+
+    <nav class="flex-1 p-4 overflow-y-auto scrollbar">
+
+        <div class="section-label">
+            Overview
+        </div>
+
+        <a href="payroll-dashboard.html" class="nav-item">
+            <i data-lucide="layout-dashboard"></i>
+            Dashboard
+        </a>
+
+
+        <div class="section-label mt-7">
+            Payroll
+        </div>
+
+        <a
+            href="payroll-register.html"
+            class="nav-item active"
+        >
+            <i data-lucide="clipboard-list"></i>
+            Payroll Register
+        </a>
+
+        <a href="payroll-processing.html" class="nav-item">
+            <i data-lucide="calculator"></i>
+            Payroll Processing
+        </a>
+
+        <a href="reconciliation.html" class="nav-item">
+            <i data-lucide="git-compare"></i>
+            Reconciliation
+        </a>
+
+        <a href="exceptions.html" class="nav-item">
+            <i data-lucide="triangle-alert"></i>
+            Exceptions
+        </a>
+
+
+        <div class="section-label mt-7">
+            Analytics
+        </div>
+
+        <a href="employee-analytics.html" class="nav-item">
+            <i data-lucide="users"></i>
+            Employee Analytics
+        </a>
+
+        <a href="overtime.html" class="nav-item">
+            <i data-lucide="clock-3"></i>
+            Overtime
+        </a>
+
+        <a href="benefits.html" class="nav-item">
+            <i data-lucide="heart-pulse"></i>
+            Benefits
+        </a>
+
+
+        <div class="section-label mt-7">
+            Compliance
+        </div>
+
+        <a href="compliance.html" class="nav-item">
+            <i data-lucide="shield-check"></i>
+            Statutory Compliance
+        </a>
+
+        <a href="final-pay.html" class="nav-item">
+            <i data-lucide="file-check-2"></i>
+            Final Pay
+        </a>
+
+
+        <div class="section-label mt-7">
+            Reports
+        </div>
+
+        <a href="reports.html" class="nav-item">
+            <i data-lucide="bar-chart-3"></i>
+            Reports
+        </a>
+
+        <a href="audit-trail.html" class="nav-item">
+            <i data-lucide="history"></i>
+            Audit Trail
+        </a>
+
+    </nav>
+
+
+    <!-- User -->
+
+    <div class="p-4 border-t border-white/10">
+
+        <div class="flex items-center gap-3 p-3 rounded-xl bg-white/5">
+
+            <div class="w-9 h-9 rounded-full bg-blue-500 flex items-center justify-center text-xs font-bold">
+                PA
+            </div>
+
+            <div class="flex-1 min-w-0">
+
+                <div class="text-sm font-semibold truncate">
+                    Payroll Analyst
+                </div>
+
+                <div class="text-[11px] text-slate-400">
+                    Demo Account
+                </div>
+
+            </div>
+
+            <i
+                data-lucide="settings"
+                class="w-4 h-4 text-slate-500"
+            ></i>
+
+        </div>
+
+    </div>
+
+</aside>
+
+
+<!-- =========================================================
+     MAIN
+========================================================= -->
+
+<main class="lg:ml-72 min-h-screen">
+
+
+<!-- =========================================================
+     HEADER
+========================================================= -->
+
+<header class="sticky top-0 z-30 glass border-b border-slate-200">
+
+    <div class="px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+
+        <div class="flex items-center gap-4">
+
+            <button
+                onclick="toggleSidebar()"
+                class="lg:hidden p-2 rounded-lg hover:bg-slate-100"
+            >
+                <i data-lucide="menu" class="w-5 h-5"></i>
+            </button>
+
+
+            <div>
+
+                <h1 class="font-bold text-lg sm:text-xl text-slate-900">
+                    Payroll Register
+                </h1>
+
+                <div class="flex items-center gap-2 text-xs text-slate-500 mt-1">
+
+                    <span class="w-2 h-2 rounded-full bg-emerald-500 pulse-dot"></span>
+
+                    <span>
+                        Operational payroll register
+                    </span>
+
+                    <span>•</span>
+
+                    <span id="lastRefresh">
+                        Loading...
+                    </span>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <div class="flex items-center gap-2">
+
+            <button
+                id="refreshBtn"
+                onclick="loadPayrollData()"
+                class="flex items-center gap-2 px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm font-medium hover:bg-slate-50 transition"
+            >
+
+                <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+
+                <span class="hidden sm:inline">
+                    Refresh
+                </span>
+
+            </button>
+
+
+            <button
+                onclick="exportCSV()"
+                class="flex items-center gap-2 px-3 py-2 bg-slate-900 text-white rounded-xl text-sm font-medium hover:bg-slate-800 transition"
+            >
+
+                <i data-lucide="download" class="w-4 h-4"></i>
+
+                <span class="hidden sm:inline">
+                    Export
+                </span>
+
+            </button>
+
+        </div>
+
+    </div>
+
+</header>
+
+
+<!-- =========================================================
+     CONTENT
+========================================================= -->
+
+<div class="p-4 sm:p-6 lg:p-8">
+
+
+<!-- =========================================================
+     PAGE INTRO
+========================================================= -->
+
+<section
+    data-aos="fade-up"
+    class="mb-6"
+>
+
+    <div class="flex flex-col lg:flex-row lg:items-end justify-between gap-4">
+
+        <div>
+
+            <div class="text-xs uppercase tracking-widest font-bold text-blue-600">
+                Payroll Operations
+            </div>
+
+            <h2 class="text-2xl font-bold text-slate-900 mt-1">
+                Payroll Register
+            </h2>
+
+            <p class="text-sm text-slate-500 mt-2 max-w-2xl">
+                Review, validate and analyze employee payroll transactions
+                across payroll periods and departments.
+            </p>
+
+        </div>
+
+
+        <div
+            id="selectedScope"
+            class="px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-medium text-slate-600"
+        >
+            All Payroll Periods
+        </div>
+
+    </div>
+
+</section>
+
+
+<!-- =========================================================
+     KPI CARDS
+========================================================= -->
+
+<section class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-4 mb-6">
+
+
+    <!-- Employees -->
+
+    <div
+        data-aos="fade-up"
+        data-aos-delay="50"
+        class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm"
+    >
+
+        <div class="w-10 h-10 rounded-xl bg-violet-50 text-violet-600 flex items-center justify-center">
+
+            <i data-lucide="users" class="w-5 h-5"></i>
+
+        </div>
+
+        <div class="text-xs text-slate-500 mt-5">
+            Employees
+        </div>
+
+        <div
+            id="kpiEmployees"
+            class="text-2xl font-bold text-slate-900 mt-1"
+        >
+            0
+        </div>
+
+    </div>
+
+
+    <!-- Gross -->
+
+    <div
+        data-aos="fade-up"
+        data-aos-delay="100"
+        class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm"
+    >
+
+        <div class="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
+
+            <i data-lucide="wallet" class="w-5 h-5"></i>
+
+        </div>
+
+        <div class="text-xs text-slate-500 mt-5">
+            Gross Payroll
+        </div>
+
+        <div
+            id="kpiGross"
+            class="text-2xl font-bold text-slate-900 mt-1"
+        >
+            ₱0
+        </div>
+
+    </div>
+
+
+    <!-- Deductions -->
+
+    <div
+        data-aos="fade-up"
+        data-aos-delay="150"
+        class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm"
+    >
+
+        <div class="w-10 h-10 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center">
+
+            <i data-lucide="minus-circle" class="w-5 h-5"></i>
+
+        </div>
+
+        <div class="text-xs text-slate-500 mt-5">
+            Total Deductions
+        </div>
+
+        <div
+            id="kpiDeductions"
+            class="text-2xl font-bold text-slate-900 mt-1"
+        >
+            ₱0
+        </div>
+
+    </div>
+
+
+    <!-- Net -->
+
+    <div
+        data-aos="fade-up"
+        data-aos-delay="200"
+        class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm"
+    >
+
+        <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
+
+            <i data-lucide="banknote" class="w-5 h-5"></i>
+
+        </div>
+
+        <div class="text-xs text-slate-500 mt-5">
+            Net Payroll
+        </div>
+
+        <div
+            id="kpiNet"
+            class="text-2xl font-bold text-slate-900 mt-1"
+        >
+            ₱0
+        </div>
+
+    </div>
+
+
+    <!-- OT -->
+
+    <div
+        data-aos="fade-up"
+        data-aos-delay="250"
+        class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm"
+    >
+
+        <div class="w-10 h-10 rounded-xl bg-cyan-50 text-cyan-600 flex items-center justify-center">
+
+            <i data-lucide="clock-3" class="w-5 h-5"></i>
+
+        </div>
+
+        <div class="text-xs text-slate-500 mt-5">
+            Overtime Cost
+        </div>
+
+        <div
+            id="kpiOT"
+            class="text-2xl font-bold text-slate-900 mt-1"
+        >
+            ₱0
+        </div>
+
+    </div>
+
+</section>
+
+
+<!-- =========================================================
+     FILTER PANEL
+========================================================= -->
+
+<section
+    data-aos="fade-up"
+    class="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 mb-6"
+>
+
+    <div class="flex items-center gap-2 mb-5">
+
+        <div class="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
+
+            <i data-lucide="sliders-horizontal" class="w-4 h-4"></i>
+
+        </div>
+
+        <div>
+
+            <h3 class="font-bold text-slate-900">
+                Register Filters
+            </h3>
+
+            <p class="text-xs text-slate-500">
+                Narrow the payroll register for validation and review
+            </p>
+
+        </div>
+
+    </div>
+
+
+    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-6 gap-4">
+
+
+        <!-- Search -->
+
+        <div class="xl:col-span-2">
+
+            <label class="block text-[10px] uppercase tracking-wider font-bold text-slate-400 mb-1.5">
+                Search Employee
+            </label>
+
+            <div class="relative">
+
+                <i
+                    data-lucide="search"
+                    class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"
+                ></i>
+
+                <input
+                    id="searchInput"
+                    type="text"
+                    placeholder="Name or employee ID..."
+                    class="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-sm outline-none focus:ring-2 focus:ring-blue-500"
+                    oninput="applyFilters()"
+                >
+
+            </div>
+
+        </div>
+
+
+        <!-- Period -->
+
+        <div>
+
+            <label class="block text-[10px] uppercase tracking-wider font-bold text-slate-400 mb-1.5">
+                Payroll Period
+            </label>
+
+            <select
+                id="periodFilter"
+                onchange="applyFilters()"
+                class="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-sm outline-none focus:ring-2 focus:ring-blue-500"
+            >
+
+                <option value="all">
+                    All Periods
+                </option>
+
+            </select>
+
+        </div>
+
+
+        <!-- Department -->
+
+        <div>
+
+            <label class="block text-[10px] uppercase tracking-wider font-bold text-slate-400 mb-1.5">
+                Department
+            </label>
+
+            <select
+                id="departmentFilter"
+                onchange="applyFilters()"
+                class="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-sm outline-none focus:ring-2 focus:ring-blue-500"
+            >
+
+                <option value="all">
+                    All Departments
+                </option>
+
+            </select>
+
+        </div>
+
+
+        <!-- Status -->
+
+        <div>
+
+            <label class="block text-[10px] uppercase tracking-wider font-bold text-slate-400 mb-1.5">
+                Payroll Status
+            </label>
+
+            <select
+                id="statusFilter"
+                onchange="applyFilters()"
+                class="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-sm outline-none focus:ring-2 focus:ring-blue-500"
+            >
+
+                <option value="all">
+                    All Statuses
+                </option>
+
+            </select>
+
+        </div>
+
+    </div>
+
+
+    <!-- Second Filter Row -->
+
+    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-6 gap-4 mt-4">
+
+
+        <div>
+
+            <label class="block text-[10px] uppercase tracking-wider font-bold text-slate-400 mb-1.5">
+                Reconciliation
+            </label>
+
+            <select
+                id="reconciliationFilter"
+                onchange="applyFilters()"
+                class="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-sm outline-none focus:ring-2 focus:ring-blue-500"
+            >
+
+                <option value="all">
+                    All
+                </option>
+
+            </select>
+
+        </div>
+
+
+        <div>
+
+            <label class="block text-[10px] uppercase tracking-wider font-bold text-slate-400 mb-1.5">
+                Exception
+            </label>
+
+            <select
+                id="exceptionFilter"
+                onchange="applyFilters()"
+                class="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-sm outline-none focus:ring-2 focus:ring-blue-500"
+            >
+
+                <option value="all">
+                    All
+                </option>
+
+                <option value="with">
+                    With Exception
+                </option>
+
+                <option value="without">
+                    No Exception
+                </option>
+
+            </select>
+
+        </div>
+
+
+        <div class="xl:col-span-2 flex items-end">
+
+            <button
+                onclick="clearFilters()"
+                class="w-full md:w-auto px-5 py-2.5 rounded-xl border border-slate-200 text-sm font-semibold text-slate-600 hover:bg-slate-50 transition"
+            >
+
+                <i
+                    data-lucide="rotate-ccw"
+                    class="w-4 h-4 inline-block mr-1"
+                ></i>
+
+                Clear Filters
+
+            </button>
+
+        </div>
+
+
+        <div class="xl:col-span-2 flex items-end justify-end">
+
+            <div class="text-xs text-slate-500">
+
+                Showing
+
+                <strong
+                    id="showingCount"
+                    class="text-slate-900"
+                >
+                    0
+                </strong>
+
+                of
+
+                <strong
+                    id="totalCount"
+                    class="text-slate-900"
+                >
+                    0
+                </strong>
+
+                records
+
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+<!-- =========================================================
+     CHART + REGISTER SUMMARY
+========================================================= -->
+
+<section class="grid grid-cols-1 xl:grid-cols-3 gap-6 mb-6">
+
+
+    <!-- Payroll Composition -->
+
+    <div
+        data-aos="fade-up"
+        class="xl:col-span-2 bg-white border border-slate-200 rounded-2xl shadow-sm"
+    >
+
+        <div class="p-5 border-b border-slate-100">
+
+            <h3 class="font-bold text-slate-900">
+                Payroll Composition
+            </h3>
+
+            <p class="text-xs text-slate-500 mt-1">
+                Gross payroll compared with deductions and net pay
+            </p>
+
+        </div>
+
+        <div class="p-3">
+
+            <div
+                id="compositionChart"
+                class="chart-container"
+            ></div>
+
+        </div>
+
+    </div>
+
+
+    <!-- Register Status -->
+
+    <div
+        data-aos="fade-up"
+        class="bg-white border border-slate-200 rounded-2xl shadow-sm"
+    >
+
+        <div class="p-5 border-b border-slate-100">
+
+            <h3 class="font-bold text-slate-900">
+                Register Status
+            </h3>
+
+            <p class="text-xs text-slate-500 mt-1">
+                Payroll processing status
+            </p>
+
+        </div>
+
+
+        <div
+            id="statusSummary"
+            class="p-5 space-y-3"
+        >
+
+            <div class="text-center text-slate-400 py-10">
+                Loading...
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+<!-- =========================================================
+     PAYROLL REGISTER
+========================================================= -->
+
+<section
+    data-aos="fade-up"
+    class="bg-white border border-slate-200 rounded-2xl shadow-sm"
+>
+
+    <div class="p-5 border-b border-slate-100 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+
+        <div>
+
+            <h3 class="font-bold text-slate-900">
+                Payroll Register
+            </h3>
+
+            <p class="text-xs text-slate-500 mt-1">
+                Detailed employee payroll transactions
+            </p>
+
+        </div>
+
+
+        <div class="flex items-center gap-2">
+
+            <button
+                onclick="previousPage()"
+                id="previousPageBtn"
+                class="px-3 py-2 rounded-lg border border-slate-200 text-xs font-semibold hover:bg-slate-50 disabled:opacity-40"
+            >
+                Previous
+            </button>
+
+            <span
+                id="pageInfo"
+                class="text-xs font-semibold text-slate-500 px-2"
+            >
+                Page 1
+            </span>
+
+            <button
+                onclick="nextPage()"
+                id="nextPageBtn"
+                class="px-3 py-2 rounded-lg border border-slate-200 text-xs font-semibold hover:bg-slate-50 disabled:opacity-40"
+            >
+                Next
+            </button>
+
+        </div>
+
+    </div>
+
+
+    <div class="overflow-x-auto scrollbar">
+
+        <table class="w-full text-sm">
+
+            <thead>
+
+                <tr class="bg-slate-50 text-[10px] uppercase tracking-wider text-slate-500 whitespace-nowrap">
+
+                    <th class="text-left px-5 py-3 font-bold">
+                        Employee
+                    </th>
+
+                    <th class="text-left px-5 py-3 font-bold">
+                        Department
+                    </th>
+
+                    <th class="text-left px-5 py-3 font-bold">
+                        Period
+                    </th>
+
+                    <th
+                        class="text-right px-5 py-3 font-bold cursor-pointer"
+                        onclick="sortTable('gross_pay')"
+                    >
+                        Gross
+                        <span id="sort-gross_pay"></span>
+                    </th>
+
+                    <th
+                        class="text-right px-5 py-3 font-bold cursor-pointer"
+                        onclick="sortTable('total_deductions')"
+                    >
+                        Deductions
+                        <span id="sort-total_deductions"></span>
+                    </th>
+
+                    <th
+                        class="text-right px-5 py-3 font-bold cursor-pointer"
+                        onclick="sortTable('net_pay')"
+                    >
+                        Net Pay
+                        <span id="sort-net_pay"></span>
+                    </th>
+
+                    <th class="text-right px-5 py-3 font-bold">
+                        OT
+                    </th>
+
+                    <th class="text-center px-5 py-3 font-bold">
+                        Reconciliation
+                    </th>
+
+                    <th class="text-center px-5 py-3 font-bold">
+                        Status
+                    </th>
+
+                    <th class="text-center px-5 py-3 font-bold">
+                        Action
+                    </th>
+
+                </tr>
+
+            </thead>
+
+
+            <tbody id="payrollTable">
+
+                <tr>
+
+                    <td
+                        colspan="10"
+                        class="text-center py-16 text-slate-400"
+                    >
+                        Loading payroll records...
+                    </td>
+
+                </tr>
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+
+    <!-- Pagination Footer -->
+
+    <div class="p-4 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+
+        <div class="text-xs text-slate-500">
+
+            Records:
+
+            <strong
+                id="rangeStart"
+                class="text-slate-900"
+            >
+                0
+            </strong>
+
+            –
+
+            <strong
+                id="rangeEnd"
+                class="text-slate-900"
+            >
+                0
+            </strong>
+
+        </div>
+
+
+        <div class="flex items-center gap-2">
+
+            <button
+                onclick="previousPage()"
+                id="previousPageBottom"
+                class="px-3 py-2 rounded-lg border border-slate-200 text-xs font-semibold hover:bg-slate-50 disabled:opacity-40"
+            >
+                Previous
+            </button>
+
+            <button
+                onclick="nextPage()"
+                id="nextPageBottom"
+                class="px-3 py-2 rounded-lg border border-slate-200 text-xs font-semibold hover:bg-slate-50 disabled:opacity-40"
+            >
+                Next
+            </button>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+<footer class="mt-8 pb-6 text-center text-xs text-slate-400">
+
+    Payroll Analyst Command Center
+    •
+    Payroll Register
+    •
+    Synthetic Demo Data
+
+</footer>
+
+
+</div>
+
+</main>
+
+
+<!-- =========================================================
+     DETAIL MODAL
+========================================================= -->
+
+<div
+    id="detailModal"
+    class="fixed inset-0 z-[100] hidden items-center justify-center p-4 bg-slate-950/50 modal-backdrop"
+>
+
+    <div
+        id="modalCard"
+        class="bg-white w-full max-w-5xl max-h-[90vh] overflow-hidden rounded-2xl shadow-2xl"
+    >
+
+        <!-- Header -->
+
+        <div class="p-5 border-b border-slate-200 flex items-center justify-between">
+
+            <div class="flex items-center gap-3">
+
+                <div
+                    class="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center"
+                >
+                    <i data-lucide="file-text" class="w-5 h-5"></i>
+                </div>
+
+                <div>
+
+                    <div
+                        id="modalEmployeeName"
+                        class="font-bold text-slate-900"
+                    >
+                        Employee
+                    </div>
+
+                    <div
+                        id="modalEmployeeId"
+                        class="text-xs text-slate-500"
+                    >
+                        Employee ID
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <button
+                onclick="closeModal()"
+                class="p-2 rounded-lg hover:bg-slate-100"
+            >
+
+                <i
+                    data-lucide="x"
+                    class="w-5 h-5"
+                ></i>
+
+            </button>
+
+        </div>
+
+
+        <!-- Body -->
+
+        <div
+            id="modalBody"
+            class="p-5 overflow-y-auto scrollbar max-h-[70vh]"
+        >
+        </div>
+
+
+        <!-- Footer -->
+
+        <div class="p-4 border-t border-slate-200 flex justify-end">
+
+            <button
+                onclick="closeModal()"
+                class="px-4 py-2.5 rounded-xl bg-slate-900 text-white text-sm font-semibold"
+            >
+                Close
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- =========================================================
+     LOADING OVERLAY
+========================================================= -->
+
+<div
+    id="loadingOverlay"
+    class="fixed inset-0 z-[200] hidden items-center justify-center bg-slate-950/30 backdrop-blur-sm"
+>
+
+    <div class="bg-white rounded-2xl shadow-2xl p-7 text-center w-72">
+
+        <div
+            class="w-12 h-12 rounded-full border-4 border-slate-200 border-t-blue-600 animate-spin mx-auto"
+        ></div>
+
+        <div class="font-bold text-slate-900 mt-5">
+            Loading Payroll Register
+        </div>
+
+        <div class="text-xs text-slate-500 mt-1">
+            Connecting to Supabase...
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- =========================================================
+     JAVASCRIPT
+========================================================= -->
+
+<script>
+
+
+/* =========================================================
+   1. SUPABASE CONFIGURATION
+========================================================= */
+
+const SUPABASE_URL =
+    "https://idiavrpxkczinrolwcre.supabase.co";
+
+const SUPABASE_ANON_KEY =
+    "sb_publishable_mlAV3ZrxC639vS79KqWcgA_mYgcYpEL";
+
+
+const { createClient } = supabase;
+
+const db =
+    createClient(
+        SUPABASE_URL,
+        SUPABASE_ANON_KEY
+    );
+
+
+/* =========================================================
+   2. GLOBAL STATE
+========================================================= */
+
+let allPayrollData = [];
+
+let filteredData = [];
+
+let currentPage = 1;
+
+const pageSize = 15;
+
+let sortColumn = "payroll_period";
+
+let sortDirection = "desc";
+
+
+/* =========================================================
+   3. INITIALIZATION
+========================================================= */
+
+document.addEventListener(
+    "DOMContentLoaded",
+    async () => {
+
+        AOS.init({
+            duration: 600,
+            once: true,
+            offset: 20
+        });
+
+        lucide.createIcons();
+
+        await loadPayrollData();
+
+    }
+);
+
+
+/* =========================================================
+   4. LOAD DATA
+========================================================= */
+
+async function loadPayrollData() {
+
+    showLoading(true);
+
+    const refreshButton =
+        document.getElementById(
+            "refreshBtn"
+        );
+
+    if (refreshButton) {
+
+        refreshButton.disabled = true;
+
+        refreshButton.classList.add(
+            "opacity-60"
+        );
+
+    }
+
+    try {
+
+        const {
+            data,
+            error
+        } = await db
+            .from("payroll_demo")
+            .select("*")
+            .order(
+                "payroll_period",
+                {
+                    ascending: false
+                }
+            );
+
+
+        if (error) {
+
+            throw error;
+
+        }
+
+
+        allPayrollData =
+            data || [];
+
+
+        populateFilters();
+
+        applyFilters();
+
+
+        document.getElementById(
+            "lastRefresh"
+        ).textContent =
+            "Updated " +
+            new Date().toLocaleTimeString(
+                "en-PH",
+                {
+                    hour: "2-digit",
+                    minute: "2-digit"
+                }
+            );
+
+
+    } catch (error) {
+
+        console.error(
+            "Payroll Register Error:",
+            error
+        );
+
+        showError(
+            "Unable to load payroll register. Check your Supabase URL, anon/publishable key, table name, and RLS SELECT policy."
+        );
+
+    } finally {
+
+        showLoading(false);
+
+        if (refreshButton) {
+
+            refreshButton.disabled = false;
+
+            refreshButton.classList.remove(
+                "opacity-60"
+            );
+
+        }
+
+    }
+
+}
+
+
+/* =========================================================
+   5. POPULATE FILTERS
+========================================================= */
+
+function populateFilters() {
+
+    const periods =
+        [
+            ...new Set(
+                allPayrollData
+                    .map(
+                        row =>
+                            row.payroll_period
+                    )
+                    .filter(Boolean)
+            )
+        ]
+        .sort()
+        .reverse();
+
+
+    const departments =
+        [
+            ...new Set(
+                allPayrollData
+                    .map(
+                        row =>
+                            row.department
+                    )
+                    .filter(Boolean)
+            )
+        ]
+        .sort();
+
+
+    const statuses =
+        [
+            ...new Set(
+                allPayrollData
+                    .map(
+                        row =>
+                            row.payroll_status
+                    )
+                    .filter(Boolean)
+            )
+        ]
+        .sort();
+
+
+    const reconciliationStatuses =
+        [
+            ...new Set(
+                allPayrollData
+                    .map(
+                        row =>
+                            row.reconciliation_status
+                    )
+                    .filter(Boolean)
+            )
+        ]
+        .sort();
+
+
+    setOptions(
+        "periodFilter",
+        periods,
+        "All Periods",
+        formatDate
+    );
+
+
+    setOptions(
+        "departmentFilter",
+        departments,
+        "All Departments",
+        value => value
+    );
+
+
+    setOptions(
+        "statusFilter",
+        statuses,
+        "All Statuses",
+        value => value
+    );
+
+
+    setOptions(
+        "reconciliationFilter",
+        reconciliationStatuses,
+        "All",
+        value => value
+    );
+
+}
+
+
+function setOptions(
+    selectId,
+    values,
+    defaultLabel,
+    formatter
+) {
+
+    const select =
+        document.getElementById(
+            selectId
+        );
+
+    select.innerHTML =
+        `<option value="all">
+            ${escapeHtml(defaultLabel)}
+        </option>`;
+
+
+    values.forEach(
+        value => {
+
+            const option =
+                document.createElement(
+                    "option"
+                );
+
+            option.value =
+                value;
+
+            option.textContent =
+                formatter(value);
+
+            select.appendChild(
+                option
+            );
+
+        }
+    );
+
+}
+
+
+/* =========================================================
+   6. FILTERING
+========================================================= */
+
+function applyFilters() {
+
+    const search =
+        document.getElementById(
+            "searchInput"
+        )
+        .value
+        .trim()
+        .toLowerCase();
+
+
+    const period =
+        document.getElementById(
+            "periodFilter"
+        ).value;
+
+
+    const department =
+        document.getElementById(
+            "departmentFilter"
+        ).value;
+
+
+    const status =
+        document.getElementById(
+            "statusFilter"
+        ).value;
+
+
+    const reconciliation =
+        document.getElementById(
+            "reconciliationFilter"
+        ).value;
+
+
+    const exception =
+        document.getElementById(
+            "exceptionFilter"
+        ).value;
+
+
+    filteredData =
+        allPayrollData.filter(
+            row => {
+
+                const employeeName =
+                    String(
+                        row.employee_name ||
+                        ""
+                    ).toLowerCase();
+
+
+                const employeeId =
+                    String(
+                        row.employee_id ||
+                        ""
+                    ).toLowerCase();
+
+
+                const searchMatch =
+                    !search ||
+                    employeeName.includes(
+                        search
+                    ) ||
+                    employeeId.includes(
+                        search
+                    );
+
+
+                const periodMatch =
+                    period === "all" ||
+                    row.payroll_period ===
+                    period;
+
+
+                const departmentMatch =
+                    department === "all" ||
+                    row.department ===
+                    department;
+
+
+                const statusMatch =
+                    status === "all" ||
+                    row.payroll_status ===
+                    status;
+
+
+                const reconciliationMatch =
+                    reconciliation === "all" ||
+                    row.reconciliation_status ===
+                    reconciliation;
+
+
+                const hasException =
+                    row.exception_type &&
+                    row.exception_type !==
+                    "None";
+
+
+                const exceptionMatch =
+                    exception === "all" ||
+                    (
+                        exception === "with" &&
+                        hasException
+                    ) ||
+                    (
+                        exception === "without" &&
+                        !hasException
+                    );
+
+
+                return (
+                    searchMatch &&
+                    periodMatch &&
+                    departmentMatch &&
+                    statusMatch &&
+                    reconciliationMatch &&
+                    exceptionMatch
+                );
+
+            }
+        );
+
+
+    currentPage = 1;
+
+    updateScope();
+
+    updateKPIs();
+
+    updateStatusSummary();
+
+    updateCompositionChart();
+
+    renderTable();
+
+}
+
+
+/* =========================================================
+   7. CLEAR FILTERS
+========================================================= */
+
+function clearFilters() {
+
+    document.getElementById(
+        "searchInput"
+    ).value = "";
+
+
+    document.getElementById(
+        "periodFilter"
+    ).value = "all";
+
+
+    document.getElementById(
+        "departmentFilter"
+    ).value = "all";
+
+
+    document.getElementById(
+        "statusFilter"
+    ).value = "all";
+
+
+    document.getElementById(
+        "reconciliationFilter"
+    ).value = "all";
+
+
+    document.getElementById(
+        "exceptionFilter"
+    ).value = "all";
+
+
+    applyFilters();
+
+}
+
+
+/* =========================================================
+   8. SCOPE LABEL
+========================================================= */
+
+function updateScope() {
+
+    const period =
+        document.getElementById(
+            "periodFilter"
+        ).value;
+
+
+    const department =
+        document.getElementById(
+            "departmentFilter"
+        ).value;
+
+
+    let text =
+        period === "all"
+            ? "All Payroll Periods"
+            : formatDate(period);
+
+
+    if (
+        department !== "all"
+    ) {
+
+        text +=
+            " • " +
+            department;
+
+    }
+
+
+    document.getElementById(
+        "selectedScope"
+    ).textContent =
+        text;
+
+}
+
+
+/* =========================================================
+   9. KPI UPDATE
+========================================================= */
+
+function updateKPIs() {
+
+    const employees =
+        new Set(
+            filteredData.map(
+                row =>
+                    row.employee_id
+            )
+        ).size;
+
+
+    const gross =
+        sum(
+            filteredData,
+            "gross_pay"
+        );
+
+
+    const deductions =
+        sum(
+            filteredData,
+            "total_deductions"
+        );
+
+
+    const net =
+        sum(
+            filteredData,
+            "net_pay"
+        );
+
+
+    const overtime =
+        sum(
+            filteredData,
+            "overtime_pay"
+        );
+
+
+    animateNumber(
+        "kpiEmployees",
+        employees
+    );
+
+
+    animateCurrency(
+        "kpiGross",
+        gross
+    );
+
+
+    animateCurrency(
+        "kpiDeductions",
+        deductions
+    );
+
+
+    animateCurrency(
+        "kpiNet",
+        net
+    );
+
+
+    animateCurrency(
+        "kpiOT",
+        overtime
+    );
+
+
+    document.getElementById(
+        "showingCount"
+    ).textContent =
+        formatNumber(
+            filteredData.length
+        );
+
+
+    document.getElementById(
+        "totalCount"
+    ).textContent =
+        formatNumber(
+            allPayrollData.length
+        );
+
+}
+
+
+/* =========================================================
+   10. STATUS SUMMARY
+========================================================= */
+
+function updateStatusSummary() {
+
+    const grouped = {};
+
+
+    filteredData.forEach(
+        row => {
+
+            const status =
+                row.payroll_status ||
+                "Unknown";
+
+
+            grouped[status] =
+                (
+                    grouped[status] ||
+                    0
+                ) + 1;
+
+        }
+    );
+
+
+    const entries =
+        Object.entries(grouped)
+            .sort(
+                (a,b) =>
+                    b[1] - a[1]
+            );
+
+
+    const container =
+        document.getElementById(
+            "statusSummary"
+        );
+
+
+    if (!entries.length) {
+
+        container.innerHTML = `
+            <div class="text-center text-slate-400 py-10">
+                No status data available.
+            </div>
+        `;
+
+        return;
+
+    }
+
+
+    const total =
+        filteredData.length;
+
+
+    container.innerHTML =
+        entries.map(
+            ([status,count]) => {
+
+                const percentage =
+                    total
+                        ? (
+                            count /
+                            total
+                        ) * 100
+                        : 0;
+
+
+                return `
+
+                    <div>
+
+                        <div class="flex items-center justify-between mb-2">
+
+                            <div class="flex items-center gap-2">
+
+                                ${statusDot(status)}
+
+                                <span class="text-sm font-medium">
+                                    ${escapeHtml(status)}
+                                </span>
+
+                            </div>
+
+                            <span class="text-sm font-bold">
+                                ${formatNumber(count)}
+                            </span>
+
+                        </div>
+
+
+                        <div class="h-2 bg-slate-100 rounded-full overflow-hidden">
+
+                            <div
+                                class="h-full rounded-full ${statusBarColor(status)}"
+                                style="width:${percentage}%"
+                            ></div>
+
+                        </div>
+
+                    </div>
+
+                `;
+
+            }
+        )
+        .join("");
+
+}
+
+
+/* =========================================================
+   11. COMPOSITION CHART
+========================================================= */
+
+let compositionChart = null;
+
+
+function updateCompositionChart() {
+
+    const gross =
+        sum(
+            filteredData,
+            "gross_pay"
+        );
+
+
+    const deductions =
+        sum(
+            filteredData,
+            "total_deductions"
+        );
+
+
+    const net =
+        sum(
+            filteredData,
+            "net_pay"
+        );
+
+
+    if (compositionChart) {
+
+        compositionChart.destroy();
+
+    }
+
+
+    compositionChart =
+        Highcharts.chart(
+            "compositionChart",
+            {
+
+                chart: {
+
+                    type: "column",
+
+                    backgroundColor:
+                        "transparent",
+
+                    height: 300
+
+                },
+
+
+                title: {
+                    text: null
+                },
+
+
+                credits: {
+                    enabled: false
+                },
+
+
+                exporting: {
+                    enabled: false
+                },
+
+
+                xAxis: {
+
+                    categories: [
+                        "Gross Payroll",
+                        "Deductions",
+                        "Net Payroll"
+                    ],
+
+                    lineColor:
+                        "#e2e8f0"
+
+                },
+
+
+                yAxis: {
+
+                    title: {
+                        text: null
+                    },
+
+                    gridLineColor:
+                        "#f1f5f9",
+
+                    labels: {
+
+                        formatter:
+                            function() {
+
+                                return "₱" +
+                                    compactCurrency(
+                                        this.value
+                                    );
+
+                            }
+
+                    }
+
+                },
+
+
+                tooltip: {
+
+                    formatter:
+                        function() {
+
+                            return `
+                                <b>
+                                    ${this.category}
+                                </b><br>
+                                <b>
+                                    ${formatCurrency(
+                                        this.y
+                                    )}
+                                </b>
+                            `;
+
+                        }
+
+                },
+
+
+                legend: {
+                    enabled: false
+                },
+
+
+                plotOptions: {
+
+                    column: {
+
+                        borderRadius: 7,
+
+                        dataLabels: {
+                            enabled: false
+                        }
+
+                    }
+
+                },
+
+
+                series: [
+
+                    {
+
+                        name:
+                            "Payroll",
+
+                        data: [
+                            gross,
+                            deductions,
+                            net
+                        ],
+
+                        color:
+                            "#2563eb"
+
+                    }
+
+                ]
+
+            }
+        );
+
+}
+
+
+/* =========================================================
+   12. TABLE SORTING
+========================================================= */
+
+function sortTable(
+    column
+) {
+
+    if (
+        sortColumn === column
+    ) {
+
+        sortDirection =
+            sortDirection === "asc"
+                ? "desc"
+                : "asc";
+
+    } else {
+
+        sortColumn =
+            column;
+
+        sortDirection =
+            "desc";
+
+    }
+
+
+    renderTable();
+
+}
+
+
+/* =========================================================
+   13. TABLE RENDER
+========================================================= */
+
+function renderTable() {
+
+    const sorted =
+        [...filteredData].sort(
+            (a,b) => {
+
+                let valueA =
+                    a[sortColumn];
+
+                let valueB =
+                    b[sortColumn];
+
+
+                if (
+                    [
+                        "gross_pay",
+                        "total_deductions",
+                        "net_pay",
+                        "overtime_pay"
+                    ].includes(
+                        sortColumn
+                    )
+                ) {
+
+                    valueA =
+                        num(valueA);
+
+                    valueB =
+                        num(valueB);
+
+                }
+
+
+                if (
+                    sortColumn ===
+                    "payroll_period"
+                ) {
+
+                    valueA =
+                        new Date(
+                            valueA ||
+                            "1900-01-01"
+                        );
+
+                    valueB =
+                        new Date(
+                            valueB ||
+                            "1900-01-01"
+                        );
+
+                }
+
+
+                if (
+                    valueA < valueB
+                ) {
+
+                    return sortDirection ===
+                        "asc"
+                        ? -1
+                        : 1;
+
+                }
+
+
+                if (
+                    valueA > valueB
+                ) {
+
+                    return sortDirection ===
+                        "asc"
+                        ? 1
+                        : -1;
+
+                }
+
+
+                return 0;
+
+            }
+        );
+
+
+    const totalPages =
+        Math.max(
+            1,
+            Math.ceil(
+                sorted.length /
+                pageSize
+            )
+        );
+
+
+    if (
+        currentPage >
+        totalPages
+    ) {
+
+        currentPage =
+            totalPages;
+
+    }
+
+
+    const start =
+        (
+            currentPage -
+            1
+        ) *
+        pageSize;
+
+
+    const rows =
+        sorted.slice(
+            start,
+            start + pageSize
+        );
+
+
+    const tbody =
+        document.getElementById(
+            "payrollTable"
+        );
+
+
+    if (!rows.length) {
+
+        tbody.innerHTML = `
+
+            <tr>
+
+                <td
+                    colspan="10"
+                    class="text-center py-16"
+                >
+
+                    <div class="flex flex-col items-center">
+
+                        <div class="w-12 h-12 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center mb-3">
+
+                            <i
+                                data-lucide="search-x"
+                                class="w-5 h-5"
+                            ></i>
+
+                        </div>
+
+                        <div class="font-semibold text-slate-600">
+                            No payroll records found
+                        </div>
+
+                        <div class="text-xs text-slate-400 mt-1">
+                            Try changing your filters.
+                        </div>
+
+                    </div>
+
+                </td>
+
+            </tr>
+
+        `;
+
+        lucide.createIcons();
+
+        updatePagination(
+            0,
+            0,
+            0
+        );
+
+        return;
+
+    }
+
+
+    tbody.innerHTML =
+        rows.map(
+            row => `
+
+                <tr class="table-row border-b border-slate-100">
+
+                    <!-- Employee -->
+
+                    <td class="px-5 py-4">
+
+                        <button
+                            onclick='openDetail(${JSON.stringify(row).replace(/'/g,"&#39;")})'
+                            class="text-left"
+                        >
+
+                            <div class="font-semibold text-slate-800 hover:text-blue-600 transition">
+                                ${escapeHtml(
+                                    row.employee_name
+                                )}
+                            </div>
+
+                            <div class="text-[10px] text-slate-400 mt-0.5">
+                                ${escapeHtml(
+                                    row.employee_id
+                                )}
+                            </div>
+
+                        </button>
+
+                    </td>
+
+
+                    <!-- Department -->
+
+                    <td class="px-5 py-4 text-slate-500 whitespace-nowrap">
+
+                        ${escapeHtml(
+                            row.department
+                        )}
+
+                    </td>
+
+
+                    <!-- Period -->
+
+                    <td class="px-5 py-4 text-slate-500 whitespace-nowrap">
+
+                        ${formatDate(
+                            row.payroll_period
+                        )}
+
+                    </td>
+
+
+                    <!-- Gross -->
+
+                    <td class="px-5 py-4 text-right font-semibold whitespace-nowrap">
+
+                        ${formatCurrency(
+                            row.gross_pay
+                        )}
+
+                    </td>
+
+
+                    <!-- Deductions -->
+
+                    <td class="px-5 py-4 text-right text-rose-600 whitespace-nowrap">
+
+                        ${formatCurrency(
+                            row.total_deductions
+                        )}
+
+                    </td>
+
+
+                    <!-- Net -->
+
+                    <td class="px-5 py-4 text-right font-bold text-slate-900 whitespace-nowrap">
+
+                        ${formatCurrency(
+                            row.net_pay
+                        )}
+
+                    </td>
+
+
+                    <!-- OT -->
+
+                    <td class="px-5 py-4 text-right whitespace-nowrap">
+
+                        <div class="font-medium">
+                            ${formatCurrency(
+                                row.overtime_pay
+                            )}
+                        </div>
+
+                        <div class="text-[10px] text-slate-400">
+                            ${num(
+                                row.overtime_hours
+                            ).toFixed(1)}
+                            hrs
+                        </div>
+
+                    </td>
+
+
+                    <!-- Reconciliation -->
+
+                    <td class="px-5 py-4 text-center">
+
+                        ${reconciliationBadge(
+                            row.reconciliation_status
+                        )}
+
+                    </td>
+
+
+                    <!-- Status -->
+
+                    <td class="px-5 py-4 text-center">
+
+                        ${payrollStatusBadge(
+                            row.payroll_status
+                        )}
+
+                    </td>
+
+
+                    <!-- Action -->
+
+                    <td class="px-5 py-4 text-center">
+
+                        <button
+                            onclick='openDetail(${JSON.stringify(row).replace(/'/g,"&#39;")})'
+                            class="p-2 rounded-lg text-slate-500 hover:text-blue-600 hover:bg-blue-50 transition"
+                            title="View details"
+                        >
+
+                            <i
+                                data-lucide="eye"
+                                class="w-4 h-4"
+                            ></i>
+
+                        </button>
+
+                    </td>
+
+                </tr>
+
+            `
+        )
+        .join("");
+
+
+    updatePagination(
+        start + 1,
+        Math.min(
+            start + pageSize,
+            sorted.length
+        ),
+        totalPages
+    );
+
+
+    updateSortIcons();
+
+    lucide.createIcons();
+
+}
+
+
+/* =========================================================
+   14. PAGINATION
+========================================================= */
+
+function updatePagination(
+    start,
+    end,
+    totalPages
+) {
+
+    document.getElementById(
+        "rangeStart"
+    ).textContent =
+        formatNumber(start);
+
+
+    document.getElementById(
+        "rangeEnd"
+    ).textContent =
+        formatNumber(end);
+
+
+    document.getElementById(
+        "pageInfo"
+    ).textContent =
+        `Page ${currentPage} of ${totalPages || 1}`;
+
+
+    const disabledPrevious =
+        currentPage <= 1;
+
+
+    const disabledNext =
+        currentPage >= totalPages;
+
+
+    [
+        "previousPageBtn",
+        "previousPageBottom"
+    ]
+    .forEach(
+        id => {
+
+            document.getElementById(
+                id
+            ).disabled =
+                disabledPrevious;
+
+        }
+    );
+
+
+    [
+        "nextPageBtn",
+        "nextPageBottom"
+    ]
+    .forEach(
+        id => {
+
+            document.getElementById(
+                id
+            ).disabled =
+                disabledNext;
+
+        }
+    );
+
+}
+
+
+function previousPage() {
+
+    if (
+        currentPage <= 1
+    ) return;
+
+
+    currentPage--;
+
+    renderTable();
+
+    window.scrollTo({
+        top: 0,
+        behavior: "smooth"
+    });
+
+}
+
+
+function nextPage() {
+
+    const totalPages =
+        Math.max(
+            1,
+            Math.ceil(
+                filteredData.length /
+                pageSize
+            )
+        );
+
+
+    if (
+        currentPage >=
+        totalPages
+    ) return;
+
+
+    currentPage++;
+
+    renderTable();
+
+    window.scrollTo({
+        top: 0,
+        behavior: "smooth"
+    });
+
+}
+
+
+/* =========================================================
+   15. SORT ICONS
+========================================================= */
+
+function updateSortIcons() {
+
+    [
+        "gross_pay",
+        "total_deductions",
+        "net_pay"
+    ]
+    .forEach(
+        column => {
+
+            const element =
+                document.getElementById(
+                    "sort-" + column
+                );
+
+            if (!element)
+                return;
+
+
+            if (
+                sortColumn !==
+                column
+            ) {
+
+                element.innerHTML =
+                    "";
+
+                return;
+
+            }
+
+
+            element.innerHTML =
+                sortDirection ===
+                "asc"
+                    ? " ↑"
+                    : " ↓";
+
+        }
+    );
+
+}
+
+
+/* =========================================================
+   16. DETAIL MODAL
+========================================================= */
+
+function openDetail(
+    row
+) {
+
+    document.getElementById(
+        "modalEmployeeName"
+    ).textContent =
+        row.employee_name ||
+        "Employee";
+
+
+    document.getElementById(
+        "modalEmployeeId"
+    ).textContent =
+        row.employee_id ||
+        "No employee ID";
+
+
+    const modal =
+        document.getElementById(
+            "detailModal"
+        );
+
+
+    const body =
+        document.getElementById(
+            "modalBody"
+        );
+
+
+    body.innerHTML = `
+
+        <!-- Payroll Summary -->
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+
+            ${detailCard(
+                "Payroll Period",
+                formatDate(
+                    row.payroll_period
+                ),
+                "calendar-days"
+            )}
+
+            ${detailCard(
+                "Department",
+                row.department || "—",
+                "building-2"
+            )}
+
+            ${detailCard(
+                "Payroll Status",
+                row.payroll_status || "—",
+                "badge-check"
+            )}
+
+            ${detailCard(
+                "Reconciliation",
+                row.reconciliation_status || "—",
+                "git-compare"
+            )}
+
+        </div>
+
+
+        <!-- Earnings -->
+
+        <div class="mb-6">
+
+            <div class="flex items-center gap-2 mb-4">
+
+                <div class="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
+
+                    <i
+                        data-lucide="trending-up"
+                        class="w-4 h-4"
+                    ></i>
+
+                </div>
+
+                <div>
+
+                    <h3 class="font-bold text-slate-900">
+                        Earnings
+                    </h3>
+
+                    <p class="text-xs text-slate-500">
+                        Payroll earnings breakdown
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+
+                ${moneyDetail(
+                    "Basic Salary",
+                    row.basic_salary
+                )}
+
+                ${moneyDetail(
+                    "Gross Pay",
+                    row.gross_pay
+                )}
+
+                ${moneyDetail(
+                    "Overtime Pay",
+                    row.overtime_pay
+                )}
+
+                ${moneyDetail(
+                    "Overtime Hours",
+                    num(
+                        row.overtime_hours
+                    ).toFixed(2) +
+                    " hrs",
+                    false
+                )}
+
+            </div>
+
+        </div>
+
+
+        <!-- Deductions -->
+
+        <div class="mb-6">
+
+            <div class="flex items-center gap-2 mb-4">
+
+                <div class="w-8 h-8 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center">
+
+                    <i
+                        data-lucide="minus-circle"
+                        class="w-4 h-4"
+                    ></i>
+
+                </div>
+
+                <div>
+
+                    <h3 class="font-bold text-slate-900">
+                        Deductions & Contributions
+                    </h3>
+
+                    <p class="text-xs text-slate-500">
+                        Payroll deductions and employer costs
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+
+                ${moneyDetail(
+                    "Total Deductions",
+                    row.total_deductions
+                )}
+
+                ${moneyDetail(
+                    "HMO Cost",
+                    row.hmo_cost
+                )}
+
+                ${moneyDetail(
+                    "Retirement",
+                    row.retirement_contribution
+                )}
+
+                ${moneyDetail(
+                    "Employer Contribution",
+                    row.employer_contribution
+                )}
+
+            </div>
+
+        </div>
+
+
+        <!-- Net Pay -->
+
+        <div class="bg-slate-950 rounded-2xl p-5 text-white mb-6">
+
+            <div class="flex items-center justify-between">
+
+                <div>
+
+                    <div class="text-xs uppercase tracking-widest text-slate-400">
+                        Net Payroll
+                    </div>
+
+                    <div class="text-3xl font-bold mt-1">
+                        ${formatCurrency(
+                            row.net_pay
+                        )}
+                    </div>
+
+                </div>
+
+                <div class="w-12 h-12 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center">
+
+                    <i
+                        data-lucide="banknote"
+                        class="w-6 h-6"
+                    ></i>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- Reconciliation -->
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+
+            <div class="border border-slate-200 rounded-2xl p-5">
+
+                <h3 class="font-bold text-slate-900 mb-4">
+                    Reconciliation
+                </h3>
+
+                <div class="space-y-3">
+
+                    <div class="flex justify-between">
+
+                        <span class="text-sm text-slate-500">
+                            Status
+                        </span>
+
+                        ${reconciliationBadge(
+                            row.reconciliation_status
+                        )}
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <div class="border border-slate-200 rounded-2xl p-5">
+
+                <h3 class="font-bold text-slate-900 mb-4">
+                    Compliance
+                </h3>
+
+                <div class="flex items-center justify-between">
+
+                    <span class="text-sm text-slate-500">
+                        Compliance Status
+                    </span>
+
+                    ${complianceBadge(
+                        row.compliance_status
+                    )}
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- Exception -->
+
+        ${
+            row.exception_type &&
+            row.exception_type !==
+            "None"
+                ? `
+
+                    <div class="mt-5 p-5 rounded-2xl bg-rose-50 border border-rose-100">
+
+                        <div class="flex gap-3">
+
+                            <div class="w-9 h-9 rounded-lg bg-rose-100 text-rose-600 flex items-center justify-center shrink-0">
+
+                                <i
+                                    data-lucide="triangle-alert"
+                                    class="w-4 h-4"
+                                ></i>
+
+                            </div>
+
+                            <div>
+
+                                <div class="font-bold text-rose-900">
+                                    Payroll Exception
+                                </div>
+
+                                <div class="text-sm text-rose-700 mt-1">
+                                    ${escapeHtml(
+                                        row.exception_type
+                                    )}
+                                </div>
+
+                                ${
+                                    row.exception_description
+                                        ? `
+                                            <div class="text-xs text-rose-600 mt-2">
+                                                ${escapeHtml(
+                                                    row.exception_description
+                                                )}
+                                            </div>
+                                        `
+                                        : ""
+                                }
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                `
+                : ""
+        }
+
+    `;
+
+
+    modal.classList.remove(
+        "hidden"
+    );
+
+    modal.classList.add(
+        "flex"
+    );
+
+
+    gsap.fromTo(
+        "#modalCard",
+        {
+            opacity: 0,
+            y: 20,
+            scale: .98
+        },
+        {
+            opacity: 1,
+            y: 0,
+            scale: 1,
+            duration: .3,
+            ease: "power2.out"
+        }
+    );
+
+
+    lucide.createIcons();
+
+}
+
+
+function closeModal() {
+
+    gsap.to(
+        "#modalCard",
+        {
+
+            opacity: 0,
+
+            y: 15,
+
+            duration: .2,
+
+            onComplete: () => {
+
+                const modal =
+                    document.getElementById(
+                        "detailModal"
+                    );
+
+                modal.classList.add(
+                    "hidden"
+                );
+
+                modal.classList.remove(
+                    "flex"
+                );
+
+            }
+
+        }
+    );
+
+}
+
+
+document.addEventListener(
+    "keydown",
+    event => {
+
+        if (
+            event.key === "Escape"
+        ) {
+
+            closeModal();
+
+        }
+
+    }
+);
+
+
+/* =========================================================
+   17. DETAIL CARD HELPERS
+========================================================= */
+
+function detailCard(
+    label,
+    value,
+    icon
+) {
+
+    return `
+
+        <div class="bg-slate-50 rounded-xl p-4">
+
+            <div class="flex items-center gap-2 text-slate-400">
+
+                <i
+                    data-lucide="${icon}"
+                    class="w-4 h-4"
+                ></i>
+
+                <span class="text-[10px] uppercase tracking-wider font-bold">
+                    ${escapeHtml(label)}
+                </span>
+
+            </div>
+
+            <div class="font-bold text-slate-900 mt-2">
+                ${escapeHtml(value)}
+            </div>
+
+        </div>
+
+    `;
+
+}
+
+
+function moneyDetail(
+    label,
+    value,
+    isMoney = true
+) {
+
+    return `
+
+        <div class="border border-slate-200 rounded-xl p-4">
+
+            <div class="text-xs text-slate-500">
+                ${escapeHtml(label)}
+            </div>
+
+            <div class="font-bold text-slate-900 mt-1">
+
+                ${
+                    isMoney
+                        ? formatCurrency(value)
+                        : escapeHtml(value)
+                }
+
+            </div>
+
+        </div>
+
+    `;
+
+}
+
+
+/* =========================================================
+   18. BADGES
+========================================================= */
+
+function reconciliationBadge(
+    value
+) {
+
+    const colors = {
+
+        Matched:
+            "bg-emerald-100 text-emerald-700",
+
+        "For Review":
+            "bg-amber-100 text-amber-700",
+
+        Variance:
+            "bg-rose-100 text-rose-700",
+
+        Resolved:
+            "bg-blue-100 text-blue-700"
+
+    };
+
+
+    return `
+
+        <span class="inline-flex px-2.5 py-1 rounded-lg text-[10px] font-bold ${
+            colors[value] ||
+            "bg-slate-100 text-slate-600"
+        }">
+
+            ${escapeHtml(
+                value ||
+                "Unknown"
+            )}
+
+        </span>
+
+    `;
+
+}
+
+
+function complianceBadge(
+    value
+) {
+
+    const color =
+        value === "Compliant"
+            ? "bg-emerald-100 text-emerald-700"
+            : value === "Review"
+                ? "bg-amber-100 text-amber-700"
+                : "bg-rose-100 text-rose-700";
+
+
+    return `
+
+        <span class="inline-flex px-2.5 py-1 rounded-lg text-[10px] font-bold ${color}">
+
+            ${escapeHtml(
+                value ||
+                "Unknown"
+            )}
+
+        </span>
+
+    `;
+
+}
+
+
+function payrollStatusBadge(
+    value
+) {
+
+    const colors = {
+
+        Processed:
+            "bg-emerald-100 text-emerald-700",
+
+        Approved:
+            "bg-blue-100 text-blue-700",
+
+        "For Review":
+            "bg-amber-100 text-amber-700",
+
+        Processing:
+            "bg-violet-100 text-violet-700",
+
+        Released:
+            "bg-cyan-100 text-cyan-700",
+
+        Draft:
+            "bg-slate-100 text-slate-600"
+
+    };
+
+
+    return `
+
+        <span class="inline-flex px-2.5 py-1 rounded-lg text-[10px] font-bold ${
+            colors[value] ||
+            "bg-slate-100 text-slate-600"
+        }">
+
+            ${escapeHtml(
+                value ||
+                "Unknown"
+            )}
+
+        </span>
+
+    `;
+
+}
+
+
+/* =========================================================
+   19. STATUS HELPERS
+========================================================= */
+
+function statusDot(
+    status
+) {
+
+    const colors = {
+
+        Processed:
+            "bg-emerald-500",
+
+        Approved:
+            "bg-blue-500",
+
+        "For Review":
+            "bg-amber-500",
+
+        Processing:
+            "bg-violet-500",
+
+        Released:
+            "bg-cyan-500",
+
+        Draft:
+            "bg-slate-400"
+
+    };
+
+
+    return `
+
+        <span class="w-2.5 h-2.5 rounded-full ${
+            colors[status] ||
+            "bg-slate-400"
+        }"></span>
+
+    `;
+
+}
+
+
+function statusBarColor(
+    status
+) {
+
+    const colors = {
+
+        Processed:
+            "bg-emerald-500",
+
+        Approved:
+            "bg-blue-500",
+
+        "For Review":
+            "bg-amber-500",
+
+        Processing:
+            "bg-violet-500",
+
+        Released:
+            "bg-cyan-500",
+
+        Draft:
+            "bg-slate-400"
+
+    };
+
+
+    return (
+        colors[status] ||
+        "bg-slate-400"
+    );
+
+}
+
+
+/* =========================================================
+   20. ANIMATIONS
+========================================================= */
+
+function animateNumber(
+    id,
+    value
+) {
+
+    const element =
+        document.getElementById(
+            id
+        );
+
+
+    const object = {
+        value: 0
+    };
+
+
+    gsap.to(
+        object,
+        {
+
+            value,
+
+            duration: 1.1,
+
+            ease: "power2.out",
+
+            onUpdate: () => {
+
+                element.textContent =
+                    Math.round(
+                        object.value
+                    ).toLocaleString();
+
+            }
+
+        }
+    );
+
+}
+
+
+function animateCurrency(
+    id,
+    value
+) {
+
+    const element =
+        document.getElementById(
+            id
+        );
+
+
+    const object = {
+        value: 0
+    };
+
+
+    gsap.to(
+        object,
+        {
+
+            value,
+
+            duration: 1.2,
+
+            ease: "power2.out",
+
+            onUpdate: () => {
+
+                element.textContent =
+                    formatCurrency(
+                        object.value
+                    );
+
+            }
+
+        }
+    );
+
+}
+
+
+/* =========================================================
+   21. EXPORT CSV
+========================================================= */
+
+function exportCSV() {
+
+    if (
+        !filteredData.length
+    ) {
+
+        alert(
+            "There are no records to export."
+        );
+
+        return;
+
+    }
+
+
+    const columns = [
+
+        "employee_id",
+        "employee_name",
+        "department",
+        "payroll_period",
+        "basic_salary",
+        "gross_pay",
+        "total_deductions",
+        "net_pay",
+        "overtime_hours",
+        "overtime_pay",
+        "hmo_cost",
+        "retirement_contribution",
+        "employer_contribution",
+        "reconciliation_status",
+        "compliance_status",
+        "exception_type",
+        "exception_amount",
+        "exception_severity",
+        "exception_status",
+        "payroll_status"
+
+    ];
+
+
+    const header =
+        columns.join(",");
+
+
+    const rows =
+        filteredData.map(
+            row =>
+                columns
+                    .map(
+                        column =>
+                            csvValue(
+                                row[column]
+                            )
+                    )
+                    .join(",")
+        );
+
+
+    const csv =
+        [header, ...rows]
+            .join("\n");
+
+
+    const blob =
+        new Blob(
+            [csv],
+            {
+                type:
+                    "text/csv;charset=utf-8;"
+            }
+        );
+
+
+    const url =
+        URL.createObjectURL(
+            blob
+        );
+
+
+    const link =
+        document.createElement(
+            "a"
+        );
+
+
+    link.href =
+        url;
+
+
+    link.download =
+        "payroll-register-" +
+        new Date()
+            .toISOString()
+            .slice(0,10) +
+        ".csv";
+
+
+    document.body.appendChild(
+        link
+    );
+
+
+    link.click();
+
+
+    link.remove();
+
+
+    URL.revokeObjectURL(
+        url
+    );
+
+}
+
+
+function csvValue(
+    value
+) {
+
+    if (
+        value === null ||
+        value === undefined
+    ) {
+
+        return "";
+
+    }
+
+
+    const string =
+        String(value);
+
+
+    return `"${string.replace(
+        /"/g,
+        '""'
+    )}"`;
+
+}
+
+
+/* =========================================================
+   22. UTILITY FUNCTIONS
+========================================================= */
+
+function num(
+    value
+) {
+
+    const number =
+        Number(value);
+
+
+    return Number.isFinite(
+        number
+    )
+        ? number
+        : 0;
+
+}
+
+
+function sum(
+    data,
+    field
+) {
+
+    return data.reduce(
+        (
+            total,
+            row
+        ) =>
+            total +
+            num(
+                row[field]
+            ),
+        0
+    );
+
+}
+
+
+function formatCurrency(
+    value
+) {
+
+    return new Intl.NumberFormat(
+        "en-PH",
+        {
+
+            style: "currency",
+
+            currency: "PHP",
+
+            minimumFractionDigits: 0,
+
+            maximumFractionDigits: 0
+
+        }
+    )
+    .format(
+        num(value)
+    );
+
+}
+
+
+function compactCurrency(
+    value
+) {
+
+    const number =
+        num(value);
+
+
+    if (
+        number >=
+        1000000000
+    ) {
+
+        return (
+            number /
+            1000000000
+        ).toFixed(1) +
+        "B";
+
+    }
+
+
+    if (
+        number >=
+        1000000
+    ) {
+
+        return (
+            number /
+            1000000
+        ).toFixed(1) +
+        "M";
+
+    }
+
+
+    if (
+        number >=
+        1000
+    ) {
+
+        return (
+            number /
+            1000
+        ).toFixed(0) +
+        "K";
+
+    }
+
+
+    return number.toString();
+
+}
+
+
+function formatNumber(
+    value
+) {
+
+    return num(value)
+        .toLocaleString(
+            "en-US"
+        );
+
+}
+
+
+function formatDate(
+    value
+) {
+
+    if (!value) {
+
+        return "—";
+
+    }
+
+
+    const date =
+        new Date(
+            String(value)
+                .slice(0,10) +
+            "T00:00:00"
+        );
+
+
+    if (
+        Number.isNaN(
+            date.getTime()
+        )
+    ) {
+
+        return String(value);
+
+    }
+
+
+    return date.toLocaleDateString(
+        "en-PH",
+        {
+
+            month: "short",
+
+            day: "numeric",
+
+            year: "numeric"
+
+        }
+    );
+
+}
+
+
+function escapeHtml(
+    value
+) {
+
+    if (
+        value === null ||
+        value === undefined
+    ) {
+
+        return "";
+
+    }
+
+
+    return String(value)
+        .replaceAll(
+            "&",
+            "&amp;"
+        )
+        .replaceAll(
+            "<",
+            "&lt;"
+        )
+        .replaceAll(
+            ">",
+            "&gt;"
+        )
+        .replaceAll(
+            '"',
+            "&quot;"
+        )
+        .replaceAll(
+            "'",
+            "&#039;"
+        );
+
+}
+
+
+/* =========================================================
+   23. SIDEBAR
+========================================================= */
+
+function toggleSidebar() {
+
+    const sidebar =
+        document.getElementById(
+            "sidebar"
+        );
+
+
+    const overlay =
+        document.getElementById(
+            "mobileOverlay"
+        );
+
+
+    sidebar.classList.toggle(
+        "open"
+    );
+
+
+    overlay.classList.toggle(
+        "hidden"
+    );
+
+}
+
+
+/* =========================================================
+   24. LOADING
+========================================================= */
+
+function showLoading(
+    visible
+) {
+
+    const overlay =
+        document.getElementById(
+            "loadingOverlay"
+        );
+
+
+    if (visible) {
+
+        overlay.classList.remove(
+            "hidden"
+        );
+
+        overlay.classList.add(
+            "flex"
+        );
+
+    } else {
+
+        overlay.classList.add(
+            "hidden"
+        );
+
+        overlay.classList.remove(
+            "flex"
+        );
+
+    }
+
+}
+
+
+/* =========================================================
+   25. ERROR HANDLING
+========================================================= */
+
+function showError(
+    message
+) {
+
+    document.getElementById(
+        "payrollTable"
+    ).innerHTML = `
+
+        <tr>
+
+            <td
+                colspan="10"
+                class="text-center py-16"
+            >
+
+                <div class="flex flex-col items-center">
+
+                    <div class="w-12 h-12 rounded-full bg-rose-50 text-rose-600 flex items-center justify-center mb-3">
+
+                        <i
+                            data-lucide="database-zap"
+                            class="w-6 h-6"
+                        ></i>
+
+                    </div>
+
+                    <div class="font-semibold text-rose-700">
+                        Unable to load payroll data
+                    </div>
+
+                    <div class="text-xs text-slate-500 mt-2 max-w-md">
+                        ${escapeHtml(
+                            message
+                        )}
+                    </div>
+
+                </div>
+
+            </td>
+
+        </tr>
+
+    `;
+
+
+    document.getElementById(
+        "lastRefresh"
+    ).textContent =
+        "Connection error";
+
+
+    lucide.createIcons();
+
+}
+
+
+/* =========================================================
+   26. NAVIGATION STYLE
+========================================================= */
+
+const navigationStyle =
+    document.createElement(
+        "style"
+    );
+
+
+navigationStyle.innerHTML = `
+
+    .section-label {
+
+        padding-left: .75rem;
+
+        margin-bottom: .65rem;
+
+        color: #64748b;
+
+        font-size: 10px;
+
+        font-weight: 700;
+
+        text-transform: uppercase;
+
+        letter-spacing: .15em;
+
+    }
+
+
+    .nav-item {
+
+        width: 100%;
+
+        display: flex;
+
+        align-items: center;
+
+        gap: .75rem;
+
+        padding: .65rem .75rem;
+
+        border-radius: .75rem;
+
+        color: #94a3b8;
+
+        font-size: .875rem;
+
+        font-weight: 500;
+
+        margin-bottom: .15rem;
+
+        transition: all .2s ease;
+
+        text-decoration: none;
+
+    }
+
+
+    .nav-item svg {
+
+        width: 1rem;
+
+        height: 1rem;
+
+    }
+
+
+    .nav-item:hover {
+
+        color: white;
+
+        background:
+            rgba(255,255,255,.06);
+
+    }
+
+
+    .nav-item.active {
+
+        color: white;
+
+        background: #2563eb;
+
+        box-shadow:
+            0 8px 25px
+            rgba(37,99,235,.20);
+
+    }
+
+`;
+
+
+document.head.appendChild(
+    navigationStyle
+);
+
+
+</script>
+
+</body>
+</html>
