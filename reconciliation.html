@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reconciliation | Payroll Analyst</title>
+
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://code.highcharts.com/highcharts.js"></script>
+<script src="https://code.highcharts.com/modules/exporting.js"></script>
+<script src="https://code.highcharts.com/modules/accessibility.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/aos@2.3.4/dist/aos.css">
+<script src="https://unpkg.com/aos@2.3.4/dist/aos.js"></script>
+<script src="https://unpkg.com/lucide@latest"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+<style>
+*{font-family:Inter,sans-serif}
+body{background:#f8fafc}
+.sidebar{transition:transform .3s ease}
+.glass{background:rgba(255,255,255,.92);backdrop-filter:blur(12px)}
+.scrollbar::-webkit-scrollbar{width:6px;height:6px}
+.scrollbar::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:999px}
+.table-row{transition:.18s ease}
+.table-row:hover{background:#f8fafc}
+.modal-backdrop{backdrop-filter:blur(5px)}
+.chart{min-height:300px}
+@media(max-width:1023px){.sidebar{transform:translateX(-100%)}.sidebar.open{transform:translateX(0)}}
+.nav-item{display:flex;align-items:center;gap:.75rem;padding:.65rem .75rem;border-radius:.7rem;color:#94a3b8;font-size:.82rem;font-weight:500;transition:.2s}
+.nav-item svg{width:17px;height:17px}
+.nav-item:hover{background:rgba(255,255,255,.07);color:#fff}
+.nav-item.active{background:#2563eb;color:#fff;box-shadow:0 8px 24px rgba(37,99,235,.2)}
+.section-label{font-size:9px;text-transform:uppercase;letter-spacing:.15em;color:#64748b;font-weight:800;padding:.35rem .75rem;margin-bottom:.25rem}
+.label{display:block;font-size:10px;text-transform:uppercase;letter-spacing:.08em;font-weight:800;color:#94a3b8;margin-bottom:6px}
+.input{width:100%;padding:.65rem .75rem;border:1px solid #e2e8f0;background:#f8fafc;border-radius:.75rem;font-size:.8rem;outline:none}
+.input:focus{background:#fff;border-color:#3b82f6;box-shadow:0 0 0 3px rgba(59,130,246,.1)}
+.pulse{animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.45}}
+</style>
+</head>
+
+<body class="text-slate-800">
+
+<div id="mobileOverlay" class="fixed inset-0 bg-slate-950/50 z-40 hidden lg:hidden" onclick="toggleSidebar()"></div>
+
+<aside id="sidebar" class="sidebar fixed left-0 top-0 bottom-0 w-72 bg-slate-950 text-white z-50 flex flex-col">
+  <div class="h-20 px-6 flex items-center border-b border-white/10">
+    <div class="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center mr-3">
+      <i data-lucide="wallet-cards" class="w-5 h-5"></i>
+    </div>
+    <div><div class="font-bold text-sm">PAYROLL ANALYST</div><div class="text-[11px] text-slate-400">Command Center</div></div>
+  </div>
+
+  <nav class="flex-1 p-4 overflow-y-auto scrollbar">
+    <div class="section-label">Overview</div>
+    <a href="index.html" class="nav-item"><i data-lucide="layout-dashboard"></i>Dashboard</a>
+
+    <div class="section-label mt-7">Payroll</div>
+    <a href="payroll-register.html" class="nav-item"><i data-lucide="clipboard-list"></i>Payroll Register</a>
+    <a href="payroll-processing.html" class="nav-item"><i data-lucide="calculator"></i>Payroll Processing</a>
+    <a href="reconciliation.html" class="nav-item active"><i data-lucide="git-compare"></i>Reconciliation</a>
+    <a href="exceptions.html" class="nav-item"><i data-lucide="triangle-alert"></i>Exceptions</a>
+
+    <div class="section-label mt-7">Analytics</div>
+    <a href="employee-analytics.html" class="nav-item"><i data-lucide="users"></i>Employee Analytics</a>
+    <a href="overtime.html" class="nav-item"><i data-lucide="clock-3"></i>Overtime</a>
+    <a href="benefits.html" class="nav-item"><i data-lucide="heart-pulse"></i>Benefits</a>
+
+    <div class="section-label mt-7">Compliance</div>
+    <a href="compliance.html" class="nav-item"><i data-lucide="shield-check"></i>Statutory Compliance</a>
+    <a href="final-pay.html" class="nav-item"><i data-lucide="file-check-2"></i>Final Pay</a>
+
+    <div class="section-label mt-7">Reports</div>
+    <a href="reports.html" class="nav-item"><i data-lucide="bar-chart-3"></i>Reports</a>
+    <a href="audit-trail.html" class="nav-item"><i data-lucide="history"></i>Audit Trail</a>
+  </nav>
+
+  <div class="p-4 border-t border-white/10">
+    <div class="flex items-center gap-3 p-3 rounded-xl bg-white/5">
+      <div class="w-9 h-9 rounded-full bg-blue-500 flex items-center justify-center text-xs font-bold">PA</div>
+      <div class="flex-1 min-w-0"><div class="text-sm font-semibold">Payroll Analyst</div><div class="text-[11px] text-slate-400">Demo Account</div></div>
+    </div>
+  </div>
+</aside>
+
+<main class="lg:ml-72 min-h-screen">
+<header class="sticky top-0 z-30 glass border-b border-slate-200">
+  <div class="px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+    <div class="flex items-center gap-4">
+      <button onclick="toggleSidebar()" class="lg:hidden p-2 rounded-lg hover:bg-slate-100"><i data-lucide="menu"></i></button>
+      <div>
+        <h1 class="font-bold text-lg sm:text-xl text-slate-900">Payroll Reconciliation</h1>
+        <div class="flex items-center gap-2 text-xs text-slate-500 mt-1">
+          <span class="w-2 h-2 rounded-full bg-emerald-500 pulse"></span>
+          <span>Validation, variance control & resolution</span><span>•</span><span id="lastRefresh">Loading...</span>
+        </div>
+      </div>
+    </div>
+    <div class="flex gap-2">
+      <button id="refreshBtn" onclick="loadData()" class="flex items-center gap-2 px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm font-medium hover:bg-slate-50">
+        <i data-lucide="refresh-cw" class="w-4 h-4"></i><span class="hidden sm:inline">Refresh</span>
+      </button>
+      <button onclick="exportCSV()" class="flex items-center gap-2 px-3 py-2 bg-slate-900 text-white rounded-xl text-sm font-medium hover:bg-slate-800">
+        <i data-lucide="download" class="w-4 h-4"></i><span class="hidden sm:inline">Export</span>
+      </button>
+    </div>
+  </div>
+</header>
+
+<div class="p-4 sm:p-6 lg:p-8">
+
+<section data-aos="fade-up" class="mb-6">
+  <div class="flex flex-col lg:flex-row lg:items-end justify-between gap-4">
+    <div>
+      <div class="text-xs uppercase tracking-widest font-bold text-blue-600">Payroll Controls</div>
+      <h2 class="text-2xl font-bold text-slate-900 mt-1">Reconciliation Center</h2>
+      <p class="text-sm text-slate-500 mt-2 max-w-3xl">Validate payroll records, identify reconciliation variances, prioritize exceptions and monitor resolution progress.</p>
+    </div>
+    <div id="selectedScope" class="px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-medium text-slate-600">All Payroll Periods</div>
+  </div>
+</section>
+
+<section class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-4 mb-6">
+  <div data-aos="fade-up" data-aos-delay="50" class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+    <div class="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center"><i data-lucide="list-checks"></i></div>
+    <div class="text-xs text-slate-500 mt-5">Total Records</div><div id="kpiTotal" class="text-2xl font-bold mt-1">0</div>
+  </div>
+  <div data-aos="fade-up" data-aos-delay="100" class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+    <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center"><i data-lucide="badge-check"></i></div>
+    <div class="text-xs text-slate-500 mt-5">Matched</div><div id="kpiMatched" class="text-2xl font-bold mt-1">0</div>
+  </div>
+  <div data-aos="fade-up" data-aos-delay="150" class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+    <div class="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center"><i data-lucide="search-check"></i></div>
+    <div class="text-xs text-slate-500 mt-5">For Review</div><div id="kpiReview" class="text-2xl font-bold mt-1">0</div>
+  </div>
+  <div data-aos="fade-up" data-aos-delay="200" class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+    <div class="w-10 h-10 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center"><i data-lucide="triangle-alert"></i></div>
+    <div class="text-xs text-slate-500 mt-5">Variance</div><div id="kpiVariance" class="text-2xl font-bold mt-1">0</div>
+  </div>
+  <div data-aos="fade-up" data-aos-delay="250" class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+    <div class="w-10 h-10 rounded-xl bg-violet-50 text-violet-600 flex items-center justify-center"><i data-lucide="percent"></i></div>
+    <div class="text-xs text-slate-500 mt-5">Match Rate</div><div id="kpiRate" class="text-2xl font-bold mt-1">0%</div>
+  </div>
+</section>
+
+<section data-aos="fade-up" class="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 mb-6">
+  <div class="flex items-center gap-2 mb-5">
+    <div class="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center"><i data-lucide="sliders-horizontal" class="w-4 h-4"></i></div>
+    <div><h3 class="font-bold">Reconciliation Filters</h3><p class="text-xs text-slate-500 mt-1">Filter the payroll population before reviewing variances.</p></div>
+  </div>
+  <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-6 gap-4">
+    <div class="xl:col-span-2">
+      <label class="label">Search Employee</label>
+      <div class="relative"><i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"></i>
+        <input id="searchInput" oninput="applyFilters()" class="input pl-9" placeholder="Employee name or ID...">
+      </div>
+    </div>
+    <div><label class="label">Payroll Period</label><select id="periodFilter" onchange="applyFilters()" class="input"></select></div>
+    <div><label class="label">Department</label><select id="departmentFilter" onchange="applyFilters()" class="input"></select></div>
+    <div><label class="label">Reconciliation</label><select id="reconciliationFilter" onchange="applyFilters()" class="input"></select></div>
+    <div><label class="label">Exception</label><select id="exceptionFilter" onchange="applyFilters()" class="input">
+      <option value="all">All</option><option value="with">With Exception</option><option value="without">No Exception</option>
+    </select></div>
+  </div>
+  <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mt-4">
+    <button onclick="clearFilters()" class="px-4 py-2.5 rounded-xl border border-slate-200 text-sm font-semibold text-slate-600 hover:bg-slate-50"><i data-lucide="rotate-ccw" class="w-4 h-4 inline mr-1"></i>Clear Filters</button>
+    <div class="text-xs text-slate-500">Showing <strong id="showingCount" class="text-slate-900">0</strong> of <strong id="totalCount" class="text-slate-900">0</strong> records</div>
+  </div>
+</section>
+
+<section class="grid grid-cols-1 xl:grid-cols-3 gap-6 mb-6">
+  <div data-aos="fade-up" class="xl:col-span-2 bg-white border border-slate-200 rounded-2xl shadow-sm">
+    <div class="p-5 border-b border-slate-100"><h3 class="font-bold">Reconciliation Distribution</h3><p class="text-xs text-slate-500 mt-1">Current filtered population by reconciliation status.</p></div>
+    <div id="statusChart" class="chart p-2"></div>
+  </div>
+  <div data-aos="fade-up" class="bg-white border border-slate-200 rounded-2xl shadow-sm">
+    <div class="p-5 border-b border-slate-100"><h3 class="font-bold">Variance Summary</h3><p class="text-xs text-slate-500 mt-1">Financial and operational exposure.</p></div>
+    <div id="varianceSummary" class="p-5 space-y-4"></div>
+  </div>
+</section>
+
+<section data-aos="fade-up" class="bg-white border border-slate-200 rounded-2xl shadow-sm mb-6">
+  <div class="p-5 border-b border-slate-100"><h3 class="font-bold">Variance Exposure by Period</h3><p class="text-xs text-slate-500 mt-1">Absolute exception amount across reconciliation records.</p></div>
+  <div id="periodChart" class="chart p-2"></div>
+</section>
+
+<section data-aos="fade-up" class="bg-white border border-slate-200 rounded-2xl shadow-sm">
+  <div class="p-5 border-b border-slate-100 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+    <div><h3 class="font-bold">Reconciliation Register</h3><p class="text-xs text-slate-500 mt-1">Detailed payroll validation records from the same payroll_demo table.</p></div>
+    <div class="flex items-center gap-2">
+      <button onclick="previousPage()" id="previousPageBtn" class="px-3 py-2 rounded-lg border border-slate-200 text-xs font-semibold hover:bg-slate-50">Previous</button>
+      <span id="pageInfo" class="text-xs font-semibold text-slate-500 px-2">Page 1 of 1</span>
+      <button onclick="nextPage()" id="nextPageBtn" class="px-3 py-2 rounded-lg border border-slate-200 text-xs font-semibold hover:bg-slate-50">Next</button>
+    </div>
+  </div>
+
+  <div class="overflow-x-auto scrollbar">
+    <table class="w-full text-sm">
+      <thead>
+        <tr class="bg-slate-50 text-[10px] uppercase tracking-wider text-slate-500 whitespace-nowrap">
+          <th class="text-left px-5 py-3">Employee</th>
+          <th class="text-left px-5 py-3">Department</th>
+          <th class="text-left px-5 py-3">Period</th>
+          <th class="text-right px-5 py-3">Gross Pay</th>
+          <th class="text-right px-5 py-3">Net Pay</th>
+          <th class="text-right px-5 py-3">Exception</th>
+          <th class="text-center px-5 py-3">Reconciliation</th>
+          <th class="text-center px-5 py-3">Severity</th>
+          <th class="text-center px-5 py-3">Action</th>
+        </tr>
+      </thead>
+      <tbody id="reconciliationTable"></tbody>
+    </table>
+  </div>
+
+  <div class="p-4 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+    <div class="text-xs text-slate-500">Records: <strong id="rangeStart" class="text-slate-900">0</strong> – <strong id="rangeEnd" class="text-slate-900">0</strong></div>
+    <div class="flex items-center gap-2">
+      <button onclick="previousPage()" id="previousPageBottom" class="px-3 py-2 rounded-lg border border-slate-200 text-xs font-semibold">Previous</button>
+      <button onclick="nextPage()" id="nextPageBottom" class="px-3 py-2 rounded-lg border border-slate-200 text-xs font-semibold">Next</button>
+    </div>
+  </div>
+</section>
+
+<footer class="mt-8 pb-6 text-center text-xs text-slate-400">Payroll Analyst Command Center • Reconciliation • Synthetic Demo Data</footer>
+</div>
+</main>
+
+<div id="detailModal" class="fixed inset-0 z-[100] hidden items-center justify-center p-4 bg-slate-950/50 modal-backdrop">
+  <div id="modalCard" class="bg-white w-full max-w-5xl max-h-[90vh] overflow-hidden rounded-2xl shadow-2xl">
+    <div class="p-5 border-b border-slate-200 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center"><i data-lucide="git-compare"></i></div>
+        <div><div id="modalEmployeeName" class="font-bold text-slate-900">Employee</div><div id="modalEmployeeId" class="text-xs text-slate-500">Employee ID</div></div>
+      </div>
+      <button onclick="closeModal()" class="p-2 rounded-lg hover:bg-slate-100"><i data-lucide="x"></i></button>
+    </div>
+    <div id="modalBody" class="p-5 overflow-y-auto scrollbar max-h-[70vh]"></div>
+    <div class="p-4 border-t border-slate-200 flex justify-end"><button onclick="closeModal()" class="px-4 py-2.5 rounded-xl bg-slate-900 text-white text-sm font-semibold">Close</button></div>
+  </div>
+</div>
+
+<div id="loadingOverlay" class="fixed inset-0 z-[200] hidden items-center justify-center bg-slate-950/30 backdrop-blur-sm">
+  <div class="bg-white rounded-2xl shadow-2xl p-7 text-center w-72">
+    <div class="w-12 h-12 rounded-full border-4 border-slate-200 border-t-blue-600 animate-spin mx-auto"></div>
+    <div class="font-bold mt-5">Loading Reconciliation</div>
+    <div class="text-xs text-slate-500 mt-1">Connecting to Supabase...</div>
+  </div>
+</div>
+
+<script>
+/* =========================================================
+   SUPABASE CONFIGURATION
+   Same configuration and table used by payroll-register.html
+========================================================= */
+const SUPABASE_URL="https://idiavrpxkczinrolwcre.supabase.co";
+const SUPABASE_ANON_KEY="sb_publishable_mlAV3ZrxC639vS79KqWcgA_mYgcYpEL";
+const {createClient}=supabase;
+const db=createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
+
+let allPayrollData=[];
+let filteredData=[];
+let currentPage=1;
+const pageSize=15;
+let statusChart=null;
+let periodChart=null;
+
+document.addEventListener("DOMContentLoaded",async()=>{
+  AOS.init({duration:600,once:true,offset:20});
+  lucide.createIcons();
+  gsap.from("main",{opacity:0,duration:.6});
+  await loadData();
+});
+
+async function loadData(){
+  showLoading(true);
+  const btn=document.getElementById("refreshBtn");
+  if(btn){btn.disabled=true;btn.classList.add("opacity-60")}
+  try{
+    const {data,error}=await db.from("payroll_demo").select("*").order("payroll_period",{ascending:false});
+    if(error) throw error;
+    allPayrollData=data||[];
+    populateFilters();
+    applyFilters();
+    document.getElementById("lastRefresh").textContent="Updated "+new Date().toLocaleTimeString("en-PH",{hour:"2-digit",minute:"2-digit"});
+  }catch(error){
+    console.error("Reconciliation Error:",error);
+    showTableMessage("Unable to load reconciliation data. Check Supabase URL, publishable key, table name and RLS SELECT policy.");
+  }finally{
+    showLoading(false);
+    if(btn){btn.disabled=false;btn.classList.remove("opacity-60")}
+  }
+}
+
+function populateFilters(){
+  const periods=[...new Set(allPayrollData.map(r=>r.payroll_period).filter(Boolean))].sort().reverse();
+  const departments=[...new Set(allPayrollData.map(r=>r.department).filter(Boolean))].sort();
+  const reconciliation=[...new Set(allPayrollData.map(r=>r.reconciliation_status).filter(Boolean))].sort();
+  setOptions("periodFilter",periods,"All Periods",formatDate);
+  setOptions("departmentFilter",departments,"All Departments",v=>v);
+  setOptions("reconciliationFilter",reconciliation,"All",v=>v);
+}
+
+function setOptions(id,values,label,formatter){
+  const el=document.getElementById(id);
+  el.innerHTML=`<option value="all">${escapeHtml(label)}</option>`;
+  values.forEach(v=>{
+    const o=document.createElement("option");
+    o.value=v;o.textContent=formatter(v);el.appendChild(o);
+  });
+}
+
+function applyFilters(){
+  const q=document.getElementById("searchInput").value.trim().toLowerCase();
+  const period=document.getElementById("periodFilter").value;
+  const dept=document.getElementById("departmentFilter").value;
+  const recon=document.getElementById("reconciliationFilter").value;
+  const exception=document.getElementById("exceptionFilter").value;
+
+  filteredData=allPayrollData.filter(row=>{
+    const employeeName=String(row.employee_name||"").toLowerCase();
+    const employeeId=String(row.employee_id||"").toLowerCase();
+    const searchMatch=!q||employeeName.includes(q)||employeeId.includes(q);
+    const periodMatch=period==="all"||row.payroll_period===period;
+    const deptMatch=dept==="all"||row.department===dept;
+    const reconMatch=recon==="all"||row.reconciliation_status===recon;
+    const hasException=!!(row.exception_type&&String(row.exception_type).toLowerCase()!=="none");
+    const exceptionMatch=exception==="all"||(exception==="with"&&hasException)||(exception==="without"&&!hasException);
+    return searchMatch&&periodMatch&&deptMatch&&reconMatch&&exceptionMatch;
+  });
+
+  currentPage=1;
+  updateScope();
+  updateKPIs();
+  updateCharts();
+  renderTable();
+}
+
+function clearFilters(){
+  document.getElementById("searchInput").value="";
+  ["periodFilter","departmentFilter","reconciliationFilter","exceptionFilter"].forEach(id=>document.getElementById(id).value="all");
+  applyFilters();
+}
+
+function updateScope(){
+  const p=document.getElementById("periodFilter").value;
+  const d=document.getElementById("departmentFilter").value;
+  let text=p==="all"?"All Payroll Periods":formatDate(p);
+  if(d!=="all")text+=" • "+d;
+  document.getElementById("selectedScope").textContent=text;
+}
+
+function updateKPIs(){
+  const counts=groupByStatus(filteredData);
+  const total=filteredData.length;
+  const matched=counts["Matched"]||0;
+  const review=counts["For Review"]||0;
+  const variance=counts["Variance"]||0;
+  document.getElementById("kpiTotal").textContent=formatNumber(total);
+  document.getElementById("kpiMatched").textContent=formatNumber(matched);
+  document.getElementById("kpiReview").textContent=formatNumber(review);
+  document.getElementById("kpiVariance").textContent=formatNumber(variance);
+  document.getElementById("kpiRate").textContent=(total?(matched/total*100):0).toFixed(1)+"%";
+  document.getElementById("showingCount").textContent=formatNumber(total);
+  document.getElementById("totalCount").textContent=formatNumber(allPayrollData.length);
+}
+
+function groupByStatus(data){
+  return data.reduce((a,r)=>{
+    const s=r.reconciliation_status||"Unknown";
+    a[s]=(a[s]||0)+1;
+    return a;
+  },{});
+}
+
+function updateCharts(){
+  const counts=groupByStatus(filteredData);
+  const order=["Matched","For Review","Variance","Resolved","Unknown"];
+  const data=order.map(s=>({name:s,y:counts[s]||0})).filter(x=>x.y>0);
+
+  if(statusChart)statusChart.destroy();
+  statusChart=Highcharts.chart("statusChart",{
+    chart:{type:"pie",backgroundColor:"transparent",height:310},
+    title:{text:null},credits:{enabled:false},exporting:{enabled:false},
+    tooltip:{pointFormat:"<b>{point.y}</b> records ({point.percentage:.1f}%)"},
+    plotOptions:{pie:{innerSize:"62%",borderWidth:0,dataLabels:{enabled:true,format:"{point.name}: {point.y}"}}},
+    series:[{name:"Records",data:data}]
+  });
+
+  const periodMap={};
+  filteredData.forEach(r=>{
+    const key=r.payroll_period||"Unknown";
+    periodMap[key]=(periodMap[key]||0)+Math.abs(num(r.exception_amount));
+  });
+  const periods=Object.keys(periodMap).sort((a,b)=>new Date(a)-new Date(b));
+  if(periodChart)periodChart.destroy();
+  periodChart=Highcharts.chart("periodChart",{
+    chart:{type:"column",backgroundColor:"transparent",height:320},
+    title:{text:null},credits:{enabled:false},exporting:{enabled:false},
+    xAxis:{categories:periods.map(formatDate),crosshair:true},
+    yAxis:{title:{text:"Exception Amount (PHP)"},labels:{formatter:function(){return "₱"+compact(this.value)}}},
+    tooltip:{shared:true,valuePrefix:"₱",valueDecimals:2},
+    legend:{enabled:false},
+    series:[{name:"Variance Exposure",data:periods.map(p=>Number(periodMap[p].toFixed(2)))}]
+  });
+
+  const open=filteredData.filter(r=>["Variance","For Review"].includes(r.reconciliation_status));
+  const exposure=open.reduce((s,r)=>s+Math.abs(num(r.exception_amount)),0);
+  const exceptionCount=filteredData.filter(r=>r.exception_type&&String(r.exception_type).toLowerCase()!=="none").length;
+  const resolved=counts["Resolved"]||0;
+
+  document.getElementById("varianceSummary").innerHTML=`
+    ${summaryCard("Open Review / Variance",open.length,"triangle-alert","rose")}
+    ${summaryCard("Variance Exposure",currency(exposure),"banknote","amber")}
+    ${summaryCard("Records With Exception",exceptionCount,"file-warning","violet")}
+    ${summaryCard("Resolved",resolved,"check-check","blue")}
+  `;
+  lucide.createIcons();
+}
+
+function summaryCard(label,value,icon,color){
+  return `<div class="flex items-center justify-between p-4 rounded-xl bg-${color}-50 border border-${color}-100">
+    <div><div class="text-xs text-${color}-600">${label}</div><div class="text-xl font-bold text-${color}-800 mt-1">${typeof value==="number"?formatNumber(value):value}</div></div>
+    <i data-lucide="${icon}" class="w-5 h-5 text-${color}-500"></i>
+  </div>`;
+}
+
+function renderTable(){
+  const rows=[...filteredData].sort((a,b)=>new Date(b.payroll_period||0)-new Date(a.payroll_period||0));
+  const totalPages=Math.max(1,Math.ceil(rows.length/pageSize));
+  if(currentPage>totalPages)currentPage=totalPages;
+  const start=(currentPage-1)*pageSize;
+  const pageRows=rows.slice(start,start+pageSize);
+  const tbody=document.getElementById("reconciliationTable");
+
+  if(!pageRows.length){
+    tbody.innerHTML=`<tr><td colspan="9" class="text-center py-16"><div class="font-semibold text-slate-600">No reconciliation records found</div><div class="text-xs text-slate-400 mt-1">Try changing your filters.</div></td></tr>`;
+  }else{
+    tbody.innerHTML=pageRows.map(row=>{
+      const exception=num(row.exception_amount);
+      return `<tr class="table-row border-b border-slate-100">
+        <td class="px-5 py-4">
+          <button onclick='openDetail(${JSON.stringify(row).replace(/'/g,"&#39;")})' class="text-left">
+            <div class="font-semibold text-slate-800 hover:text-blue-600">${escapeHtml(row.employee_name||"—")}</div>
+            <div class="text-[10px] text-slate-400 mt-0.5">${escapeHtml(row.employee_id||"—")}</div>
+          </button>
+        </td>
+        <td class="px-5 py-4 text-slate-500 whitespace-nowrap">${escapeHtml(row.department||"—")}</td>
+        <td class="px-5 py-4 text-slate-500 whitespace-nowrap">${formatDate(row.payroll_period)}</td>
+        <td class="px-5 py-4 text-right font-semibold whitespace-nowrap">${currency(row.gross_pay)}</td>
+        <td class="px-5 py-4 text-right font-bold whitespace-nowrap">${currency(row.net_pay)}</td>
+        <td class="px-5 py-4 text-right whitespace-nowrap ${exception? "text-rose-600 font-semibold":"text-slate-400"}">${exception?currency(exception):"—"}</td>
+        <td class="px-5 py-4 text-center">${reconciliationBadge(row.reconciliation_status)}</td>
+        <td class="px-5 py-4 text-center">${severityBadge(row.exception_severity)}</td>
+        <td class="px-5 py-4 text-center">
+          <button onclick='openDetail(${JSON.stringify(row).replace(/'/g,"&#39;")})' class="p-2 rounded-lg text-slate-500 hover:text-blue-600 hover:bg-blue-50" title="View details"><i data-lucide="eye" class="w-4 h-4"></i></button>
+        </td>
+      </tr>`;
+    }).join("");
+  }
+
+  updatePagination(start+1,Math.min(start+pageSize,rows.length),totalPages);
+  lucide.createIcons();
+}
+
+function reconciliationBadge(status){
+  const map={
+    "Matched":"bg-emerald-50 text-emerald-700 border-emerald-200",
+    "For Review":"bg-amber-50 text-amber-700 border-amber-200",
+    "Variance":"bg-rose-50 text-rose-700 border-rose-200",
+    "Resolved":"bg-blue-50 text-blue-700 border-blue-200"
+  };
+  const cls=map[status]||"bg-slate-50 text-slate-600 border-slate-200";
+  return `<span class="inline-flex px-2.5 py-1 rounded-full border text-[10px] font-bold whitespace-nowrap ${cls}">${escapeHtml(status||"Unknown")}</span>`;
+}
+
+function severityBadge(value){
+  const map={
+    "Critical":"bg-rose-100 text-rose-700",
+    "High":"bg-orange-100 text-orange-700",
+    "Medium":"bg-amber-100 text-amber-700",
+    "Low":"bg-blue-100 text-blue-700"
+  };
+  if(!value||String(value).toLowerCase()==="none")return `<span class="text-slate-300">—</span>`;
+  return `<span class="inline-flex px-2 py-1 rounded-full text-[10px] font-bold ${map[value]||"bg-slate-100 text-slate-600"}">${escapeHtml(value)}</span>`;
+}
+
+function updatePagination(start,end,totalPages){
+  document.getElementById("rangeStart").textContent=filteredData.length?formatNumber(start):"0";
+  document.getElementById("rangeEnd").textContent=filteredData.length?formatNumber(end):"0";
+  document.getElementById("pageInfo").textContent=`Page ${currentPage} of ${totalPages||1}`;
+  const prev=currentPage<=1,next=currentPage>=totalPages;
+  ["previousPageBtn","previousPageBottom"].forEach(id=>document.getElementById(id).disabled=prev);
+  ["nextPageBtn","nextPageBottom"].forEach(id=>document.getElementById(id).disabled=next);
+}
+
+function previousPage(){
+  if(currentPage<=1)return;
+  currentPage--;renderTable();window.scrollTo({top:0,behavior:"smooth"});
+}
+function nextPage(){
+  const totalPages=Math.max(1,Math.ceil(filteredData.length/pageSize));
+  if(currentPage>=totalPages)return;
+  currentPage++;renderTable();window.scrollTo({top:0,behavior:"smooth"});
+}
+
+function openDetail(row){
+  document.getElementById("modalEmployeeName").textContent=row.employee_name||"Employee";
+  document.getElementById("modalEmployeeId").textContent=row.employee_id||"No employee ID";
+  document.getElementById("modalBody").innerHTML=`
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+      ${detailCard("Payroll Period",formatDate(row.payroll_period),"calendar-days")}
+      ${detailCard("Department",row.department||"—","building-2")}
+      ${detailCard("Payroll Status",row.payroll_status||"—","badge-check")}
+      ${detailCard("Reconciliation",row.reconciliation_status||"—","git-compare")}
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div class="border border-slate-200 rounded-2xl p-5">
+        <h4 class="font-bold mb-4">Payroll Values</h4>
+        <div class="space-y-3">
+          ${valueRow("Basic Salary",currency(row.basic_salary))}
+          ${valueRow("Gross Pay",currency(row.gross_pay))}
+          ${valueRow("Total Deductions",currency(row.total_deductions))}
+          ${valueRow("Net Pay",currency(row.net_pay))}
+          ${valueRow("Overtime Pay",currency(row.overtime_pay))}
+          ${valueRow("Overtime Hours",num(row.overtime_hours).toFixed(1)+" hrs")}
+        </div>
+      </div>
+
+      <div class="border border-slate-200 rounded-2xl p-5">
+        <h4 class="font-bold mb-4">Reconciliation / Exception</h4>
+        <div class="space-y-3">
+          ${valueRow("Reconciliation Status",reconciliationBadge(row.reconciliation_status))}
+          ${valueRow("Exception Type",escapeHtml(row.exception_type||"None"))}
+          ${valueRow("Exception Amount",currency(row.exception_amount))}
+          ${valueRow("Severity",severityBadge(row.exception_severity))}
+          ${valueRow("Exception Status",escapeHtml(row.exception_status||"—"))}
+          ${valueRow("Compliance Status",escapeHtml(row.compliance_status||"—"))}
+        </div>
+      </div>
+    </div>
+
+    <div class="mt-6 border border-slate-200 rounded-2xl p-5">
+      <h4 class="font-bold mb-4">Benefits / Employer Cost</h4>
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        ${detailCard("HMO Cost",currency(row.hmo_cost),"heart-pulse")}
+        ${detailCard("Retirement Contribution",currency(row.retirement_contribution),"landmark")}
+        ${detailCard("Employer Contribution",currency(row.employer_contribution),"building-2")}
+      </div>
+    </div>`;
+  const modal=document.getElementById("detailModal");
+  modal.classList.remove("hidden");modal.classList.add("flex");
+  lucide.createIcons();
+  gsap.from("#modalCard",{y:30,opacity:0,duration:.3,ease:"power2.out"});
+}
+
+function detailCard(label,value,icon){
+  return `<div class="p-4 rounded-xl bg-slate-50 border border-slate-100">
+    <div class="flex items-center gap-2 text-xs text-slate-500"><i data-lucide="${icon}" class="w-4 h-4 text-blue-500"></i>${escapeHtml(label)}</div>
+    <div class="font-bold text-slate-900 mt-2">${typeof value==="string"&&value.includes("<span")?value:escapeHtml(String(value))}</div>
+  </div>`;
+}
+
+function valueRow(label,value){
+  return `<div class="flex items-center justify-between gap-4 py-2 border-b border-slate-100 last:border-0"><span class="text-sm text-slate-500">${escapeHtml(label)}</span><span class="text-sm font-semibold text-slate-800 text-right">${value}</span></div>`;
+}
+
+function closeModal(){
+  const modal=document.getElementById("detailModal");
+  gsap.to("#modalCard",{y:20,opacity:0,duration:.2,onComplete:()=>{
+    modal.classList.add("hidden");modal.classList.remove("flex");
+    gsap.set("#modalCard",{clearProps:"all"});
+  }});
+}
+
+document.getElementById("detailModal").addEventListener("click",e=>{
+  if(e.target.id==="detailModal")closeModal();
+});
+
+function exportCSV(){
+  if(!filteredData.length){alert("There are no records to export.");return}
+  const columns=["employee_id","employee_name","department","payroll_period","basic_salary","gross_pay","total_deductions","net_pay","overtime_hours","overtime_pay","hmo_cost","retirement_contribution","employer_contribution","reconciliation_status","compliance_status","exception_type","exception_amount","exception_severity","exception_status","payroll_status"];
+  const csv=[columns.join(","),...filteredData.map(r=>columns.map(c=>csvValue(r[c])).join(","))].join("\n");
+  const blob=new Blob([csv],{type:"text/csv;charset=utf-8;"});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement("a");a.href=url;a.download="payroll-reconciliation.csv";a.click();
+  URL.revokeObjectURL(url);
+}
+
+function csvValue(v){
+  if(v===null||v===undefined)return "";
+  const s=String(v).replaceAll('"','""');
+  return `"${s}"`;
+}
+
+function num(v){
+  const n=Number(v);
+  return Number.isFinite(n)?n:0;
+}
+function currency(v){
+  return new Intl.NumberFormat("en-PH",{style:"currency",currency:"PHP",minimumFractionDigits:0,maximumFractionDigits:0}).format(num(v));
+}
+function formatNumber(v){return num(v).toLocaleString("en-US")}
+function compact(v){
+  const n=num(v);
+  if(n>=1000000000)return (n/1000000000).toFixed(1)+"B";
+  if(n>=1000000)return (n/1000000).toFixed(1)+"M";
+  if(n>=1000)return (n/1000).toFixed(0)+"K";
+  return n.toString();
+}
+function formatDate(value){
+  if(!value)return "—";
+  const d=new Date(String(value).slice(0,10)+"T00:00:00");
+  if(Number.isNaN(d.getTime()))return String(value);
+  return d.toLocaleDateString("en-PH",{month:"short",day:"numeric",year:"numeric"});
+}
+function escapeHtml(value){
+  if(value===null||value===undefined)return "";
+  return String(value).replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;");
+}
+function toggleSidebar(){
+  document.getElementById("sidebar").classList.toggle("open");
+  document.getElementById("mobileOverlay").classList.toggle("hidden");
+}
+function showLoading(visible){
+  const el=document.getElementById("loadingOverlay");
+  el.classList.toggle("hidden",!visible);
+  el.classList.toggle("flex",visible);
+}
+function showTableMessage(message){
+  document.getElementById("reconciliationTable").innerHTML=`<tr><td colspan="9" class="text-center py-16 text-rose-500">${escapeHtml(message)}</td></tr>`;
+}
+</script>
+</body>
+</html>
