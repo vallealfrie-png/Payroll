@@ -1,0 +1,266 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Final Pay | Payroll Analyst</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://code.highcharts.com/highcharts.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/aos@2.3.4/dist/aos.css">
+<script src="https://unpkg.com/aos@2.3.4/dist/aos.js"></script>
+<script src="https://unpkg.com/lucide@latest"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{font-family:Inter,sans-serif}body{background:#f8fafc}.sidebar{transition:.3s}
+.nav{display:flex;gap:12px;align-items:center;padding:10px 12px;border-radius:10px;color:#94a3b8;font-size:13px}
+.nav:hover{background:#ffffff12;color:#fff}.nav.active{background:#2563eb;color:#fff}
+.input{padding:10px 12px;border:1px solid #e2e8f0;background:#f8fafc;border-radius:12px;font-size:12px;outline:0}
+.input:focus{border-color:#3b82f6;background:#fff}.chart{min-height:320px}
+@media(max-width:1023px){.sidebar{transform:translateX(-100%)}.sidebar.open{transform:translateX(0)}}
+</style>
+</head>
+<body class="text-slate-800">
+<div id="overlay" class="fixed inset-0 bg-slate-950/50 z-40 hidden lg:hidden" onclick="toggleSidebar()"></div>
+
+<aside id="side" class="sidebar fixed inset-y-0 left-0 w-72 bg-slate-950 z-50 text-white flex flex-col">
+<div class="h-20 px-6 flex items-center border-b border-white/10">
+<div class="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center mr-3"><i data-lucide="wallet-cards"></i></div>
+<div><b class="text-sm">PAYROLL ANALYST</b><div class="text-[11px] text-slate-400">Command Center</div></div>
+</div>
+<nav class="p-4 overflow-y-auto flex-1">
+<div class="text-[10px] font-bold uppercase tracking-wider text-slate-500 px-3 mb-2">Overview</div>
+<a class="nav" href="index.html"><i data-lucide="layout-dashboard"></i>Dashboard</a>
+<div class="text-[10px] font-bold uppercase tracking-wider text-slate-500 px-3 mt-7 mb-2">Payroll</div>
+<a class="nav" href="payroll-register.html"><i data-lucide="clipboard-list"></i>Payroll Register</a>
+<a class="nav" href="payroll-processing.html"><i data-lucide="calculator"></i>Payroll Processing</a>
+<a class="nav" href="reconciliation.html"><i data-lucide="git-compare"></i>Reconciliation</a>
+<a class="nav" href="exceptions.html"><i data-lucide="triangle-alert"></i>Exceptions</a>
+<div class="text-[10px] font-bold uppercase tracking-wider text-slate-500 px-3 mt-7 mb-2">Analytics</div>
+<a class="nav" href="employee-analytics.html"><i data-lucide="users"></i>Employee Analytics</a>
+<a class="nav" href="overtime.html"><i data-lucide="clock-3"></i>Overtime</a>
+<a class="nav" href="benefits.html"><i data-lucide="heart-pulse"></i>Benefits</a>
+<div class="text-[10px] font-bold uppercase tracking-wider text-slate-500 px-3 mt-7 mb-2">Compliance</div>
+<a class="nav" href="compliance.html"><i data-lucide="shield-check"></i>Statutory Compliance</a>
+<a class="nav active" href="final-pay.html"><i data-lucide="file-check-2"></i>Final Pay</a>
+<div class="text-[10px] font-bold uppercase tracking-wider text-slate-500 px-3 mt-7 mb-2">Reports</div>
+<a class="nav" href="reports.html"><i data-lucide="bar-chart-3"></i>Reports</a>
+<a class="nav" href="audit-trail.html"><i data-lucide="history"></i>Audit Trail</a>
+</nav>
+</aside>
+
+<main class="lg:ml-72 min-h-screen">
+<header class="sticky top-0 z-30 bg-white/95 backdrop-blur border-b">
+<div class="h-20 px-4 sm:px-8 flex items-center justify-between">
+<div class="flex gap-4 items-center">
+<button class="lg:hidden" onclick="toggleSidebar()"><i data-lucide="menu"></i></button>
+<div><h1 class="font-bold text-xl">Final Pay</h1><p class="text-xs text-slate-500">Separation pay, leave conversion & final payroll monitoring</p></div>
+</div>
+<div class="flex gap-2">
+<button onclick="load()" class="px-3 py-2 border rounded-xl text-sm">↻ Refresh</button>
+<button onclick="exportCSV()" class="px-3 py-2 bg-slate-900 text-white rounded-xl text-sm">↓ Export</button>
+</div>
+</div>
+</header>
+
+<div class="p-4 sm:p-6 lg:p-8">
+<section data-aos="fade-up" class="mb-6 flex flex-col xl:flex-row justify-between gap-4">
+<div>
+<div class="text-xs uppercase tracking-widest font-bold text-blue-600">Separation Processing Control</div>
+<h2 class="text-2xl font-bold mt-1">Final Pay & Separation Analysis</h2>
+<p class="text-sm text-slate-500 mt-2">Demo analysis using the existing <b>payroll_demo</b> table.</p>
+</div>
+<div class="flex gap-3">
+<select id="department" onchange="filterData()" class="input"><option value="all">All Departments</option></select>
+<select id="statusFilter" onchange="filterData()" class="input">
+<option value="all">All Statuses</option><option value="For Review">For Review</option><option value="Ready">Ready</option>
+</select>
+</div>
+</section>
+
+<section class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4 mb-6">
+<div class="bg-white border rounded-2xl p-5 shadow-sm"><div class="text-xs text-slate-500">Employees</div><b id="employees" class="text-2xl">0</b></div>
+<div class="bg-white border rounded-2xl p-5 shadow-sm"><div class="text-xs text-slate-500">Final Pay Exposure</div><b id="exposure" class="text-xl">₱0</b></div>
+<div class="bg-white border rounded-2xl p-5 shadow-sm"><div class="text-xs text-slate-500">Unused Leave</div><b id="leavePay" class="text-xl">₱0</b></div>
+<div class="bg-white border rounded-2xl p-5 shadow-sm"><div class="text-xs text-slate-500">Prorated 13th Month</div><b id="thirteenth" class="text-xl">₱0</b></div>
+<div class="bg-white border rounded-2xl p-5 shadow-sm"><div class="text-xs text-slate-500">Deductions</div><b id="deductions" class="text-xl">₱0</b></div>
+<div class="bg-white border rounded-2xl p-5 shadow-sm"><div class="text-xs text-slate-500">Review Queue</div><b id="review" class="text-2xl">0</b></div>
+</section>
+
+<div class="grid xl:grid-cols-2 gap-6 mb-6">
+<div class="bg-white border rounded-2xl shadow-sm"><div class="p-5 border-b"><b>Final Pay Components</b><p class="text-xs text-slate-500 mt-1">Estimated exposure by component.</p></div><div id="componentChart" class="chart"></div></div>
+<div class="bg-white border rounded-2xl shadow-sm"><div class="p-5 border-b"><b>Final Pay Exposure by Department</b></div><div id="deptChart" class="chart"></div></div>
+</div>
+
+<div class="grid xl:grid-cols-2 gap-6 mb-6">
+<div class="bg-white border rounded-2xl shadow-sm"><div class="p-5 border-b"><b>Processing Status</b></div><div id="statusChart" class="chart"></div></div>
+<div class="bg-white border rounded-2xl shadow-sm"><div class="p-5 border-b"><b>Final Pay Control Checks</b></div><div id="checks" class="p-5 space-y-3"></div></div>
+</div>
+
+<section class="bg-white border rounded-2xl shadow-sm">
+<div class="p-5 border-b flex flex-col lg:flex-row justify-between gap-3">
+<div><b>Final Pay Register</b><p class="text-xs text-slate-500 mt-1">Click an employee for the estimated breakdown.</p></div>
+<input id="search" oninput="filterData()" class="input w-64" placeholder="Search employee or ID...">
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-sm">
+<thead class="bg-slate-50 text-[10px] uppercase text-slate-500">
+<tr><th class="text-left p-4">Employee</th><th class="text-left p-4">Department</th><th class="text-right p-4">Basic Pay</th><th class="text-right p-4">Leave Pay</th><th class="text-right p-4">13th Month</th><th class="text-right p-4">Deductions</th><th class="text-right p-4">Est. Final Pay</th><th class="text-center p-4">Status</th></tr>
+</thead><tbody id="table"></tbody>
+</table>
+</div>
+<div class="p-4 border-t flex justify-between items-center text-xs">
+<span>Showing <b id="from">0</b>–<b id="to">0</b> of <b id="count">0</b></span>
+<div class="flex gap-2 items-center"><button id="prev" onclick="prevPage()" class="border rounded-lg px-3 py-2">Previous</button><span id="pageInfo">Page 1 of 1</span><button id="next" onclick="nextPage()" class="border rounded-lg px-3 py-2">Next</button></div>
+</div>
+</section>
+<div class="text-center text-xs text-slate-400 py-8">Payroll Analyst Command Center • Final Pay • Synthetic Demo Data</div>
+</div>
+</main>
+
+<div id="modal" class="fixed inset-0 z-[100] hidden items-center justify-center p-4 bg-slate-950/50">
+<div id="modalCard" class="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-auto shadow-2xl">
+<div class="p-5 border-b flex justify-between"><div><b id="mName"></b><div id="mId" class="text-xs text-slate-500"></div></div><button onclick="closeModal()">✕</button></div>
+<div id="mBody" class="p-5"></div>
+</div></div>
+
+<script>
+const SUPABASE_URL="https://idiavrpxkczinrolwcre.supabase.co";
+const SUPABASE_ANON_KEY="sb_publishable_mlAV3ZrxC639vS79KqWcgA_mYgcYpEL";
+const db=supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
+let all=[],rows=[],page=1,size=15,charts={};
+
+const n=x=>{let v=Number(x);return Number.isFinite(v)?v:0};
+const money=x=>new Intl.NumberFormat("en-PH",{style:"currency",currency:"PHP",maximumFractionDigits:0}).format(n(x));
+
+/* Demo assumptions. Replace with approved company/legal rules in production. */
+const monthly=x=>n(x.basic_salary);
+const daily=x=>monthly(x)/26;
+const leaveDays=x=>Math.min(30,Math.max(0,n(x.leave_balance)));
+const leavePayCalc=x=>daily(x)*leaveDays(x);
+const monthsWorked=x=>Math.min(12,Math.max(1,n(x.months_worked)||6));
+const prorated13=x=>monthly(x)/12*monthsWorked(x);
+const daysWorked=x=>Math.min(26,Math.max(0,n(x.days_worked)||15));
+const basicFinal=x=>daily(x)*daysWorked(x);
+const pendingDeductions=x=>Math.max(0,n(x.total_deductions))*0.35;
+const finalPay=x=>Math.max(0,basicFinal(x)+leavePayCalc(x)+prorated13(x)-pendingDeductions(x));
+function status(x){return n(x.basic_salary)>0&&x.employee_id?(n(x.leave_balance)<0?"For Review":"Ready"):"For Review"}
+function esc(x){return String(x??"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;")}
+
+async function load(){
+try{
+let r=await db.from("payroll_demo").select("*");
+if(r.error)throw r.error;
+all=r.data||[];
+let ds=[...new Set(all.map(x=>x.department).filter(Boolean))].sort();
+department.innerHTML='<option value="all">All Departments</option>'+ds.map(x=>`<option value="${esc(x)}">${esc(x)}</option>`).join("");
+filterData();
+}catch(e){
+console.error(e);
+table.innerHTML='<tr><td colspan="8" class="p-12 text-center text-rose-500">Unable to load payroll_demo. Check Supabase RLS SELECT policy.</td></tr>';
+}}
+
+function filterData(){
+let d=department.value,s=statusFilter.value,q=search.value.toLowerCase().trim();
+rows=all.filter(x=>(d==="all"||x.department===d)&&(s==="all"||status(x)===s)&&(!q||String(x.employee_name||"").toLowerCase().includes(q)||String(x.employee_id||"").toLowerCase().includes(q)));
+page=1;update();
+}
+
+function update(){
+let exp=rows.reduce((a,x)=>a+finalPay(x),0);
+let lp=rows.reduce((a,x)=>a+leavePayCalc(x),0);
+let th=rows.reduce((a,x)=>a+prorated13(x),0);
+let ded=rows.reduce((a,x)=>a+pendingDeductions(x),0);
+employees.textContent=rows.length.toLocaleString();
+exposure.textContent=money(exp);leavePay.textContent=money(lp);thirteenth.textContent=money(th);deductions.textContent=money(ded);
+review.textContent=rows.filter(x=>status(x)==="For Review").length;
+draw();render();
+}
+
+function draw(){
+let comp={
+"Basic Pay":rows.reduce((a,x)=>a+basicFinal(x),0),
+"Leave Conversion":rows.reduce((a,x)=>a+leavePayCalc(x),0),
+"13th Month":rows.reduce((a,x)=>a+prorated13(x),0),
+"Deductions":rows.reduce((a,x)=>a+pendingDeductions(x),0)
+};
+kill("component");
+charts.component=Highcharts.chart("componentChart",{chart:{type:"column",height:330},title:{text:null},credits:{enabled:false},xAxis:{categories:Object.keys(comp)},yAxis:{title:{text:"PHP"}},legend:{enabled:false},tooltip:{valuePrefix:"₱"},series:[{name:"Amount",data:Object.values(comp)}]});
+
+let d={};
+rows.forEach(x=>{let k=x.department||"Unassigned";d[k]=(d[k]||0)+finalPay(x)});
+kill("dept");
+charts.dept=Highcharts.chart("deptChart",{chart:{type:"bar",height:330},title:{text:null},credits:{enabled:false},xAxis:{categories:Object.keys(d)},yAxis:{title:{text:"PHP"}},legend:{enabled:false},tooltip:{valuePrefix:"₱"},series:[{name:"Final Pay Exposure",data:Object.values(d)}]});
+
+let st={"Ready":rows.filter(x=>status(x)==="Ready").length,"For Review":rows.filter(x=>status(x)==="For Review").length};
+kill("status");
+charts.status=Highcharts.chart("statusChart",{chart:{type:"pie",height:330},title:{text:null},credits:{enabled:false},plotOptions:{pie:{innerSize:"60%",dataLabels:{enabled:true}}},series:[{data:Object.entries(st).map(([name,y])=>({name,y}))}]});
+
+let missing=rows.filter(x=>!x.employee_id||!x.employee_name).length;
+let negative=rows.filter(x=>n(x.leave_balance)<0).length;
+let zeroGross=rows.filter(x=>n(x.gross_pay)<=0).length;
+checks.innerHTML=
+check("Employee identity validation",missing,"Missing employee ID or employee name.","rose")+
+check("Leave balance validation",negative,"Negative leave balances flagged for review.","amber")+
+check("Gross pay validation",zeroGross,"Records with zero or missing gross pay.","rose")+
+check("Calculation coverage",rows.length,"Records included in the final-pay analysis.","emerald");
+}
+
+function check(a,b,c,cl){
+return `<div class="p-4 rounded-xl border bg-slate-50"><div class="flex justify-between"><b class="text-sm">${a}</b><b class="text-${cl}-600">${b}</b></div><div class="text-xs text-slate-500 mt-1">${c}</div></div>`;
+}
+
+function render(){
+let pages=Math.max(1,Math.ceil(rows.length/size));
+page=Math.min(page,pages);
+let start=(page-1)*size,r=rows.slice(start,start+size);
+table.innerHTML=r.length?r.map((x,i)=>{
+let s=status(x);
+return `<tr class="border-b hover:bg-slate-50">
+<td class="p-4"><button class="text-left" onclick="openModal(${start+i})"><b class="hover:text-blue-600">${esc(x.employee_name||"—")}</b><div class="text-[10px] text-slate-400">${esc(x.employee_id||"—")}</div></button></td>
+<td class="p-4">${esc(x.department||"—")}</td><td class="p-4 text-right">${money(basicFinal(x))}</td><td class="p-4 text-right">${money(leavePayCalc(x))}</td>
+<td class="p-4 text-right">${money(prorated13(x))}</td><td class="p-4 text-right">${money(pendingDeductions(x))}</td>
+<td class="p-4 text-right font-bold">${money(finalPay(x))}</td>
+<td class="p-4 text-center"><span class="px-2 py-1 rounded-full text-[10px] font-bold ${s==="Ready"?"bg-emerald-100 text-emerald-700":"bg-amber-100 text-amber-700"}">${s}</span></td>
+</tr>`}).join(""):'<tr><td colspan="8" class="p-12 text-center text-slate-400">No records found.</td></tr>';
+from.textContent=rows.length?start+1:0;to.textContent=Math.min(start+size,rows.length);count.textContent=rows.length;
+pageInfo.textContent=`Page ${page} of ${pages}`;prev.disabled=page<=1;next.disabled=page>=pages;
+}
+
+function prevPage(){if(page>1){page--;render()}}
+function nextPage(){if(page<Math.ceil(rows.length/size)){page++;render()}}
+
+function openModal(i){
+let x=rows[i];
+mName.textContent=x.employee_name||"Employee";mId.textContent=x.employee_id||"";
+mBody.innerHTML=`
+<div class="grid sm:grid-cols-2 gap-4">
+${card("Basic Pay",money(basicFinal(x)))}${card("Leave Conversion",money(leavePayCalc(x)))}
+${card("Prorated 13th Month",money(prorated13(x)))}${card("Estimated Deductions",money(pendingDeductions(x)))}
+<div class="sm:col-span-2 p-5 rounded-2xl bg-blue-50 border border-blue-100"><div class="text-xs text-blue-600 font-bold uppercase">Estimated Final Pay</div><div class="text-3xl font-extrabold mt-2">${money(finalPay(x))}</div></div>
+</div>
+<div class="mt-5 border rounded-2xl p-5">
+${line("Department",x.department||"—")}${line("Basic Salary",money(x.basic_salary))}${line("Gross Pay",money(x.gross_pay))}
+${line("Leave Balance",leaveDays(x)+" days")}${line("Assumed Days Worked",daysWorked(x)+" days")}
+${line("Months Worked",monthsWorked(x)+" months")}${line("Processing Status",status(x))}
+</div>
+<div class="mt-4 text-[10px] text-slate-400">Demo calculation only. Actual final pay, separation pay, leave conversion, tax treatment and statutory deductions depend on company policy, employment circumstances, applicable law and validated employee records.</div>`;
+modal.classList.remove("hidden");modal.classList.add("flex");
+gsap.from("#modalCard",{y:20,opacity:0,duration:.3});
+}
+function card(a,b){return `<div class="p-4 rounded-xl bg-slate-50 border"><div class="text-xs text-slate-500">${a}</div><b class="block mt-2">${b}</b></div>`}
+function line(a,b){return `<div class="flex justify-between gap-4 py-2 border-b border-slate-100"><span class="text-sm text-slate-500">${esc(a)}</span><b class="text-sm text-right">${esc(b)}</b></div>`}
+function closeModal(){gsap.to("#modalCard",{y:20,opacity:0,duration:.2,onComplete:()=>{modal.classList.add("hidden");modal.classList.remove("flex")}})}
+
+function exportCSV(){
+if(!rows.length)return alert("No records to export.");
+let h=["employee_id","employee_name","department","basic_pay","leave_conversion","prorated_13th_month","estimated_deductions","estimated_final_pay","status"];
+let out=[h.join(","),...rows.map(x=>[x.employee_id,x.employee_name,x.department,basicFinal(x),leavePayCalc(x),prorated13(x),pendingDeductions(x),finalPay(x),status(x)].map(v=>`"${String(v??"").replaceAll('"','""')}"`).join(","))].join("\\n");
+let a=document.createElement("a");a.href=URL.createObjectURL(new Blob([out],{type:"text/csv"}));a.download="final-pay-register.csv";a.click();
+}
+function kill(k){if(charts[k])charts[k].destroy()}
+function toggleSidebar(){side.classList.toggle("open");overlay.classList.toggle("hidden")}
+document.addEventListener("DOMContentLoaded",()=>{AOS.init({duration:600,once:true});lucide.createIcons();load()});
+</script>
+</body></html>
