@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Payroll Analyst Command Center — Reports</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://code.highcharts.com/highcharts.js"></script>
+<script src="https://code.highcharts.com/modules/exporting.js"></script>
+<script src="https://code.highcharts.com/modules/accessibility.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+<script src="https://unpkg.com/aos@2.3.4/dist/aos.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/aos@2.3.4/dist/aos.css">
+<script src="https://unpkg.com/lucide@latest"></script>
+<style>
+body{font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#f8fafc;color:#0f172a}
+.card{background:#fff;border:1px solid #e2e8f0;border-radius:16px;box-shadow:0 4px 16px rgba(15,23,42,.04)}
+.nav-item{transition:.2s}.nav-item:hover{background:rgba(255,255,255,.08)}
+.nav-active{background:rgba(59,130,246,.18);color:#fff;border-left:3px solid #60a5fa}
+.metric{transition:.2s}.metric:hover{transform:translateY(-2px);box-shadow:0 10px 25px rgba(15,23,42,.08)}
+.table-wrap{overflow:auto}.table-wrap table{min-width:900px}
+.scrollbar::-webkit-scrollbar{width:5px;height:5px}.scrollbar::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:10px}
+@media(max-width:1023px){#sidebar{transform:translateX(-100%)}#sidebar.open{transform:translateX(0)}#overlay.show{display:block}}
+</style>
+</head>
+<body>
+<div id="overlay" class="fixed inset-0 bg-slate-950/40 z-30 hidden" onclick="toggleSidebar()"></div>
+<aside id="sidebar" class="fixed inset-y-0 left-0 z-40 w-72 bg-slate-950 text-slate-300 transition-transform duration-300 flex flex-col">
+<div class="h-20 px-6 flex items-center border-b border-white/10">
+<div class="w-10 h-10 rounded-xl bg-blue-500/15 flex items-center justify-center mr-3"><i data-lucide="calculator" class="w-5 h-5 text-blue-400"></i></div>
+<div><div class="text-white font-bold">Payroll Analyst</div><div class="text-[11px] text-slate-500 uppercase tracking-wider">Command Center</div></div>
+</div>
+<nav class="flex-1 p-4 space-y-1 overflow-y-auto scrollbar">
+<div class="text-[10px] uppercase tracking-widest text-slate-600 px-3 pt-2 pb-2">Operations</div>
+<a href="index.html" class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm"><i data-lucide="layout-dashboard" class="w-4 h-4"></i>Dashboard</a>
+<a href="payroll-processing.html" class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm"><i data-lucide="play-circle" class="w-4 h-4"></i>Payroll Processing</a>
+<a href="payroll-register.html" class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm"><i data-lucide="table-2" class="w-4 h-4"></i>Payroll Register</a>
+<a href="reconciliation.html" class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm"><i data-lucide="git-compare" class="w-4 h-4"></i>Reconciliation</a>
+<a href="exceptions.html" class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm"><i data-lucide="triangle-alert" class="w-4 h-4"></i>Exceptions</a>
+<div class="text-[10px] uppercase tracking-widest text-slate-600 px-3 pt-5 pb-2">Analysis</div>
+<a href="employee-analytics.html" class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm"><i data-lucide="users-round" class="w-4 h-4"></i>Employee Analytics</a>
+<a href="overtime.html" class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm"><i data-lucide="clock-3" class="w-4 h-4"></i>Overtime</a>
+<a href="benefits.html" class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm"><i data-lucide="heart-pulse" class="w-4 h-4"></i>Benefits</a>
+<a href="compliance.html" class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm"><i data-lucide="shield-check" class="w-4 h-4"></i>Compliance</a>
+<a href="final-pay.html" class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm"><i data-lucide="wallet-cards" class="w-4 h-4"></i>Final Pay</a>
+<a href="reports.html" class="nav-item nav-active flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm"><i data-lucide="file-bar-chart-2" class="w-4 h-4"></i>Reports</a>
+<a href="audit-trail.html" class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm"><i data-lucide="history" class="w-4 h-4"></i>Audit Trail</a>
+</nav>
+<div class="p-4 border-t border-white/10"><div class="rounded-xl bg-white/5 p-3"><div class="flex items-center gap-2 text-xs text-slate-400"><span class="w-2 h-2 rounded-full bg-emerald-400"></span>Supabase Connected</div><div id="lastRefreshSide" class="text-[10px] text-slate-600 mt-1">Waiting for data</div></div></div>
+</aside>
+
+<main class="lg:ml-72 min-h-screen">
+<header class="sticky top-0 z-20 h-20 bg-white/90 backdrop-blur border-b border-slate-200">
+<div class="h-full px-4 sm:px-6 lg:px-8 flex items-center justify-between gap-4">
+<div class="flex items-center gap-3">
+<button onclick="toggleSidebar()" class="lg:hidden p-2 rounded-lg hover:bg-slate-100"><i data-lucide="menu" class="w-5 h-5"></i></button>
+<div><div class="text-xs text-slate-500">Payroll Analyst Command Center</div><h1 class="text-xl sm:text-2xl font-bold tracking-tight">Reports & Business Intelligence</h1></div>
+</div>
+<div class="flex items-center gap-2">
+<button onclick="exportReport()" class="hidden sm:flex items-center gap-2 px-3 py-2 rounded-lg border border-slate-200 text-sm font-semibold hover:bg-slate-50"><i data-lucide="download" class="w-4 h-4"></i>Export Report</button>
+<button onclick="loadData()" class="p-2 rounded-lg border border-slate-200 hover:bg-slate-50" title="Refresh"><i data-lucide="refresh-cw" class="w-4 h-4"></i></button>
+</div>
+</div>
+</header>
+
+<section class="p-4 sm:p-6 lg:p-8">
+<div class="mb-6 flex flex-col xl:flex-row xl:items-end xl:justify-between gap-4" data-aos="fade-up">
+<div><p class="text-sm text-slate-500">Consolidated reporting view across payroll operations, reconciliation, compliance and employee cost.</p></div>
+<div class="flex flex-wrap gap-2">
+<select id="periodFilter" onchange="renderAll()" class="bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none"><option value="ALL">All Payroll Periods</option></select>
+<select id="deptFilter" onchange="renderAll()" class="bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none"><option value="ALL">All Departments</option></select>
+</div>
+</div>
+<div id="statusBox" class="hidden mb-5 rounded-xl border px-4 py-3 text-sm"></div>
+
+<div class="grid grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-4 mb-6">
+<div class="card metric p-4 sm:p-5"><div class="flex justify-between"><div class="text-xs font-semibold text-slate-500">Total Gross Payroll</div><i data-lucide="banknote" class="w-5 h-5 text-blue-500"></i></div><div id="grossKpi" class="mt-3 text-xl sm:text-2xl font-bold">₱0</div><div id="grossSub" class="mt-1 text-xs text-slate-400">—</div></div>
+<div class="card metric p-4 sm:p-5"><div class="flex justify-between"><div class="text-xs font-semibold text-slate-500">Net Payroll</div><i data-lucide="wallet" class="w-5 h-5 text-emerald-500"></i></div><div id="netKpi" class="mt-3 text-xl sm:text-2xl font-bold">₱0</div><div id="netSub" class="mt-1 text-xs text-slate-400">—</div></div>
+<div class="card metric p-4 sm:p-5"><div class="flex justify-between"><div class="text-xs font-semibold text-slate-500">Payroll Records</div><i data-lucide="users" class="w-5 h-5 text-violet-500"></i></div><div id="recordsKpi" class="mt-3 text-xl sm:text-2xl font-bold">0</div><div id="recordsSub" class="mt-1 text-xs text-slate-400">—</div></div>
+<div class="card metric p-4 sm:p-5"><div class="flex justify-between"><div class="text-xs font-semibold text-slate-500">Average Net Pay</div><i data-lucide="chart-no-axes-combined" class="w-5 h-5 text-amber-500"></i></div><div id="avgKpi" class="mt-3 text-xl sm:text-2xl font-bold">₱0</div><div id="avgSub" class="mt-1 text-xs text-slate-400">—</div></div>
+</div>
+
+<div class="grid grid-cols-1 xl:grid-cols-3 gap-4 mb-6">
+<div class="card p-5 xl:col-span-2"><div class="flex items-center justify-between mb-4"><div><h2 class="font-bold">Payroll Cost Trend</h2><p class="text-xs text-slate-400 mt-1">Gross payroll, deductions and estimated net pay</p></div><span class="text-[11px] font-bold px-2 py-1 rounded-full bg-blue-50 text-blue-700">Management View</span></div><div id="trendChart" class="h-80"></div></div>
+<div class="card p-5"><div class="mb-4"><h2 class="font-bold">Payroll Composition</h2><p class="text-xs text-slate-400 mt-1">Current filtered population</p></div><div id="compositionChart" class="h-80"></div></div>
+</div>
+
+<div class="grid grid-cols-1 xl:grid-cols-2 gap-4 mb-6">
+<div class="card p-5"><div class="mb-4"><h2 class="font-bold">Payroll by Department</h2><p class="text-xs text-slate-400 mt-1">Gross payroll concentration</p></div><div id="deptChart" class="h-80"></div></div>
+<div class="card p-5"><div class="mb-4"><h2 class="font-bold">Average Pay by Department</h2><p class="text-xs text-slate-400 mt-1">Average gross and net pay</p></div><div id="avgDeptChart" class="h-80"></div></div>
+</div>
+
+<div class="card p-5 mb-6">
+<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-5"><div><h2 class="font-bold">Payroll Control Summary</h2><p class="text-xs text-slate-400 mt-1">Reconciliation indicators available from the demo dataset</p></div><span id="dataCoverage" class="text-[11px] font-bold px-2 py-1 rounded-full bg-slate-100 text-slate-600">0 records</span></div>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+<div class="rounded-xl border border-slate-200 p-4"><div class="text-xs text-slate-500">Matched</div><div id="matchedCtl" class="text-xl font-bold mt-1">0</div><div class="text-[11px] text-slate-400 mt-1">Reconciled records</div></div>
+<div class="rounded-xl border border-slate-200 p-4"><div class="text-xs text-slate-500">For Review</div><div id="reviewCtl" class="text-xl font-bold mt-1">0</div><div class="text-[11px] text-slate-400 mt-1">Requires validation</div></div>
+<div class="rounded-xl border border-slate-200 p-4"><div class="text-xs text-slate-500">Variance</div><div id="varianceCtl" class="text-xl font-bold mt-1">0</div><div class="text-[11px] text-slate-400 mt-1">Payroll differences</div></div>
+<div class="rounded-xl border border-slate-200 p-4"><div class="text-xs text-slate-500">Resolved</div><div id="resolvedCtl" class="text-xl font-bold mt-1">0</div><div class="text-[11px] text-slate-400 mt-1">Closed control items</div></div>
+</div></div>
+
+<div class="card overflow-hidden">
+<div class="p-5 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3"><div><h2 class="font-bold">Department Payroll Report</h2><p class="text-xs text-slate-400 mt-1">Consolidated payroll analytics for management review</p></div><input id="searchBox" oninput="renderTable()" placeholder="Search department or employee..." class="w-full sm:w-72 border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none"></div>
+<div class="table-wrap scrollbar"><table class="w-full text-sm"><thead class="bg-slate-50 border-b border-slate-200"><tr class="text-left text-xs text-slate-500 uppercase tracking-wide"><th class="px-5 py-3">Department</th><th class="px-5 py-3 text-right">Employees</th><th class="px-5 py-3 text-right">Gross Payroll</th><th class="px-5 py-3 text-right">Deductions</th><th class="px-5 py-3 text-right">Net Payroll</th><th class="px-5 py-3 text-right">Avg Gross</th><th class="px-5 py-3 text-right">Avg Net</th></tr></thead><tbody id="reportBody" class="divide-y divide-slate-100"></tbody></table></div>
+<div class="p-4 border-t border-slate-200 text-xs text-slate-400" id="tableFooter">0 departments</div>
+</div>
+<div class="mt-5 text-[11px] text-slate-400">Demo note: this page uses the single <code>payroll_demo</code> table. Net payroll is calculated as gross pay less total deductions when a direct net-pay field is unavailable. Reconciliation cards only count fields actually present in the returned dataset.</div>
+</section>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const SUPABASE_URL="https://idiavrpxkczinrolwcre.supabase.co";
+const SUPABASE_ANON_KEY="sb_publishable_mlAV3ZrxC639vS79KqWcgA_mYgcYpEL";
+const db=supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
+let rows=[],filtered=[];
+const n=v=>{if(v===null||v===undefined||v==="")return 0;const x=Number(String(v).replace(/,/g,"").replace(/[₱$]/g,"").trim());return Number.isFinite(x)?x:0};
+const money=v=>"₱"+n(v).toLocaleString("en-PH",{minimumFractionDigits:0,maximumFractionDigits:0});
+const money2=v=>"₱"+n(v).toLocaleString("en-PH",{minimumFractionDigits:2,maximumFractionDigits:2});
+const esc=s=>String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));
+const gross=r=>n(r.gross_pay)||n(r.gross_salary)||n(r.total_gross)||n(r.basic_salary);
+const ded=r=>n(r.total_deductions)||n(r.deductions)||n(r.total_deduction);
+const net=r=>n(r.net_pay)||n(r.net_salary)||n(r.net_payroll)||Math.max(0,gross(r)-ded(r));
+const period=r=>String(r.payroll_period??r.period??r.pay_period??"Unspecified");
+const dept=r=>String(r.department??r.dept??"Unassigned");
+
+function statusBox(msg,type="info"){const e=document.getElementById("statusBox");e.className="mb-5 rounded-xl border px-4 py-3 text-sm "+(type==="error"?"border-rose-200 bg-rose-50 text-rose-700":"border-blue-200 bg-blue-50 text-blue-700");e.textContent=msg;e.classList.remove("hidden")}
+function hideStatus(){document.getElementById("statusBox").classList.add("hidden")}
+
+async function loadData(){
+ statusBox("Loading payroll reporting data...");
+ try{
+  let all=[],size=1000;
+  for(let from=0;;from+=size){const {data,error}=await db.from("payroll_demo").select("*").range(from,from+size-1);if(error)throw error;if(data?.length)all.push(...data);if(!data||data.length<size)break}
+  rows=all;populateFilters();renderAll();hideStatus();document.getElementById("lastRefreshSide").textContent="Updated "+new Date().toLocaleTimeString("en-PH");
+ }catch(e){console.error(e);rows=[];renderAll();statusBox("Unable to load payroll_demo. Check Supabase RLS/SELECT permission and table name.","error")}
+}
+function populateFilters(){
+ const p=document.getElementById("periodFilter"),d=document.getElementById("deptFilter"),op=p.value,od=d.value;
+ const ps=[...new Set(rows.map(period))].sort((a,b)=>a.localeCompare(b,undefined,{numeric:true})),ds=[...new Set(rows.map(dept))].sort();
+ p.innerHTML='<option value="ALL">All Payroll Periods</option>'+ps.map(x=>`<option value="${esc(x)}">${esc(x)}</option>`).join("");
+ d.innerHTML='<option value="ALL">All Departments</option>'+ds.map(x=>`<option value="${esc(x)}">${esc(x)}</option>`).join("");
+ if(ps.includes(op))p.value=op;if(ds.includes(od))d.value=od;
+}
+function applyFilters(){const p=document.getElementById("periodFilter").value,d=document.getElementById("deptFilter").value;filtered=rows.filter(r=>(p==="ALL"||period(r)===p)&&(d==="ALL"||dept(r)===d))}
+function renderAll(){applyFilters();renderKpis();renderCharts();renderControls();renderTable()}
+function renderKpis(){
+ const g=filtered.reduce((a,r)=>a+gross(r),0),d=filtered.reduce((a,r)=>a+ded(r),0),netp=filtered.reduce((a,r)=>a+net(r),0),c=filtered.length,emp=new Set(filtered.map(r=>r.employee_id||r.employee_name||r.id)).size;
+ grossKpi.textContent=money(g);netKpi.textContent=money(netp);recordsKpi.textContent=c.toLocaleString();avgKpi.textContent=money(c?netp/c:0);
+ grossSub.textContent=money2(d)+" estimated deductions";netSub.textContent=(g?(netp/g*100):0).toFixed(1)+"% of gross";recordsSub.textContent=emp.toLocaleString()+" unique employees";avgSub.textContent="Based on filtered records";
+}
+function renderControls(){
+ const c={matched:0,review:0,variance:0,resolved:0},fields=["reconciliation_status","recon_status","status","processing_status","payroll_status"];
+ filtered.forEach(r=>{const k=fields.find(x=>r[x]!==undefined&&r[x]!==null&&String(r[x]).trim());if(!k)return;const s=String(r[k]).toLowerCase().replace(/[_-]/g," ");if(s.includes("match"))c.matched++;else if(s.includes("review")||s.includes("pending"))c.review++;else if(s.includes("variance")||s.includes("exception"))c.variance++;else if(s.includes("resolv")||s.includes("closed"))c.resolved++});
+ matchedCtl.textContent=c.matched.toLocaleString();reviewCtl.textContent=c.review.toLocaleString();varianceCtl.textContent=c.variance.toLocaleString();resolvedCtl.textContent=c.resolved.toLocaleString();dataCoverage.textContent=filtered.length.toLocaleString()+" records";
+}
+function renderCharts(){
+ const byP={};filtered.forEach(r=>{const p=period(r);byP[p]??={g:0,d:0,n:0};byP[p].g+=gross(r);byP[p].d+=ded(r);byP[p].n+=net(r)});
+ let ps=Object.keys(byP).sort((a,b)=>a.localeCompare(b,undefined,{numeric:true}));if(ps.length>18)ps=ps.slice(-18);
+ Highcharts.chart("trendChart",{chart:{type:"line",backgroundColor:"transparent"},title:{text:null},credits:{enabled:false},xAxis:{categories:ps},yAxis:{title:{text:"Amount (₱)"},labels:{formatter(){return "₱"+Highcharts.numberFormat(this.value/1000,0)+"k"}}},tooltip:{shared:true,valuePrefix:"₱",valueDecimals:2},series:[{name:"Gross Payroll",data:ps.map(p=>byP[p].g)},{name:"Deductions",data:ps.map(p=>byP[p].d)},{name:"Net Payroll",data:ps.map(p=>byP[p].n)}]});
+ const g=filtered.reduce((a,r)=>a+gross(r),0),d=filtered.reduce((a,r)=>a+ded(r),0),nn=filtered.reduce((a,r)=>a+net(r),0);
+ Highcharts.chart("compositionChart",{chart:{type:"pie",backgroundColor:"transparent"},title:{text:null},credits:{enabled:false},tooltip:{pointFormat:"<b>₱{point.y:,.2f}</b>"},plotOptions:{pie:{innerSize:"58%",dataLabels:{enabled:true,format:"{point.name}: {point.percentage:.1f}%"}}},series:[{name:"Payroll",data:[{name:"Net Payroll",y:Math.max(0,nn)},{name:"Deductions",y:Math.max(0,d)}]}]});
+ const dg={};filtered.forEach(r=>{const x=dept(r);dg[x]??={g:0,n:0,c:0};dg[x].g+=gross(r);dg[x].n+=net(r);dg[x].c++});
+ const ds=Object.keys(dg).sort((a,b)=>dg[b].g-dg[a].g).slice(0,12);
+ Highcharts.chart("deptChart",{chart:{type:"bar",backgroundColor:"transparent"},title:{text:null},credits:{enabled:false},xAxis:{categories:ds},yAxis:{title:{text:"Gross Payroll (₱)"},labels:{formatter(){return "₱"+Highcharts.numberFormat(this.value/1000,0)+"k"}}},legend:{enabled:false},tooltip:{pointFormat:"<b>₱{point.y:,.2f}</b>"},series:[{name:"Gross Payroll",data:ds.map(x=>dg[x].g)}]});
+ Highcharts.chart("avgDeptChart",{chart:{type:"column",backgroundColor:"transparent"},title:{text:null},credits:{enabled:false},xAxis:{categories:ds,labels:{rotation:-35,style:{fontSize:"9px"}}},yAxis:{title:{text:"Average Pay (₱)"},labels:{formatter(){return "₱"+Highcharts.numberFormat(this.value/1000,0)+"k"}}},tooltip:{shared:true,valuePrefix:"₱",valueDecimals:2},series:[{name:"Avg Gross",data:ds.map(x=>dg[x].g/dg[x].c)},{name:"Avg Net",data:ds.map(x=>dg[x].n/dg[x].c)}]});
+}
+function renderTable(){
+ const q=document.getElementById("searchBox").value.toLowerCase().trim(),base=filtered.filter(r=>!q||dept(r).toLowerCase().includes(q)||String(r.employee_name??"").toLowerCase().includes(q)||String(r.employee_id??"").toLowerCase().includes(q)),g={};
+ base.forEach(r=>{const d=dept(r);g[d]??={c:0,g:0,d:0,n:0};g[d].c++;g[d].g+=gross(r);g[d].d+=ded(r);g[d].n+=net(r)});
+ const arr=Object.entries(g).sort((a,b)=>b[1].g-a[1].g);
+ reportBody.innerHTML=arr.length?arr.map(([d,x])=>`<tr class="hover:bg-slate-50"><td class="px-5 py-3 font-semibold">${esc(d)}</td><td class="px-5 py-3 text-right">${x.c.toLocaleString()}</td><td class="px-5 py-3 text-right">${money2(x.g)}</td><td class="px-5 py-3 text-right text-rose-600">${money2(x.d)}</td><td class="px-5 py-3 text-right font-semibold">${money2(x.n)}</td><td class="px-5 py-3 text-right">${money2(x.g/x.c)}</td><td class="px-5 py-3 text-right">${money2(x.n/x.c)}</td></tr>`).join(""):`<tr><td colspan="7" class="px-5 py-10 text-center text-slate-400">No report data found.</td></tr>`;
+ tableFooter.textContent=arr.length.toLocaleString()+" departments • "+base.length.toLocaleString()+" records";
+}
+function exportReport(){
+ const q=document.getElementById("searchBox").value.toLowerCase().trim(),base=filtered.filter(r=>!q||dept(r).toLowerCase().includes(q)||String(r.employee_name??"").toLowerCase().includes(q)||String(r.employee_id??"").toLowerCase().includes(q)),g={};
+ base.forEach(r=>{const d=dept(r);g[d]??={c:0,g:0,d:0,n:0};g[d].c++;g[d].g+=gross(r);g[d].d+=ded(r);g[d].n+=net(r)});
+ const out=[["Department","Employees","Gross Payroll","Deductions","Net Payroll","Average Gross","Average Net"].join(",")];
+ Object.entries(g).sort((a,b)=>b[1].g-a[1].g).forEach(([d,x])=>out.push([csv(d),x.c,x.g.toFixed(2),x.d.toFixed(2),x.n.toFixed(2),(x.g/x.c).toFixed(2),(x.n/x.c).toFixed(2)].join(",")));
+ const blob=new Blob([out.join("\n")],{type:"text/csv;charset=utf-8"}),u=URL.createObjectURL(blob),a=document.createElement("a");a.href=u;a.download="payroll_management_report.csv";a.click();URL.revokeObjectURL(u);
+}
+const csv=v=>`"${String(v??"").replace(/"/g,'""')}"`;
+function toggleSidebar(){sidebar.classList.toggle("open");overlay.classList.toggle("show")}
+document.addEventListener("DOMContentLoaded",()=>{lucide.createIcons();AOS.init({duration:650,once:true,offset:20});gsap.from("main",{opacity:0,duration:.45});loadData()});
+</script>
+</body>
+</html>
